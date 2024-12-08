@@ -1,0 +1,139 @@
+/* General Styles */
+body {
+  background-color: #f8f9fa;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Header Styles */
+header {
+  background-color: #343a40;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header a {
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+  margin-left: 1rem;
+}
+
+header a:hover {
+  text-decoration: underline;
+}
+
+/* Heading Styles */
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #343a40;
+  text-align: center;
+}
+
+/* Form Styles */
+form {
+  margin-top: 2rem;
+}
+
+form .form-label {
+  font-weight: bold;
+  color: #343a40;
+}
+
+form .form-control {
+  border-radius: 5px;
+}
+
+form button {
+  background-color: #007bff;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+form button:hover {
+  background-color: #0056b3;
+}
+
+/* Table Styles */
+.table {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.table th,
+.table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.table th {
+  background-color: #343a40;
+  color: white;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f2f2f2;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #e9ecef;
+}
+
+/* Buttons */
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  font-size: 0.9rem;
+}
+
+.btn-success {
+  background-color: #28a745;
+  border: none;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+.btn-warning {
+  background-color: #ffc107;
+  border: none;
+  color: black;
+}
+
+.btn-warning:hover {
+  background-color: #e0a800;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border: none;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+/* Footer Styles */
+footer {
+  background-color: #343a40;
+  color: white;
+  text-align: center;
+  padding: 1rem 0;
+  margin-top: 2rem;
+}
+
+footer p {
+  margin: 0;
+  font-size: 0.9rem;
+}

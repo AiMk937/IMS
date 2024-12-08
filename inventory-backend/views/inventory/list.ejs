@@ -1,0 +1,46 @@
+<%- include('../layout/header', { title: 'Inventory List' }) %>
+
+<div class="container my-5">
+  <header class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-primary">Inventory List</h1>
+    <a href="/items/add" class="btn btn-success">Add New Item</a>
+  </header>
+
+  <main>
+    <% if (items.length > 0) { %>
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Description</th>
+              <th scope="col">Cost Price</th>
+              <th scope="col">Selling Price</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% items.forEach(item => { %>
+              <tr>
+                <td><%= item.name || "N/A" %></td>
+                <td><%= item.description || "N/A" %></td>
+                <td>₹<%= item.costPrice ? item.costPrice.toFixed(2) : "0.00" %></td>
+                <td>₹<%= item.sellingPrice ? item.sellingPrice.toFixed(2) : "0.00" %></td>
+                <td><%= item.quantity || 0 %></td>
+                <td>
+                  <a href="/items/edit/<%= item._id %>" class="btn btn-warning btn-sm">Edit</a>
+                  <a href="/items/delete/<%= item._id %>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this item?')">Delete</a>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-center text-muted">No items found in inventory. <a href="/items/add" class="text-primary">Add a new item</a>.</p>
+    <% } %>
+  </main>
+</div>
+
+<%- include('../layout/footer') %>

@@ -1,0 +1,53 @@
+<%- include('../layout/header', { title: 'Add Inventory Item' }) %>
+
+<div class="container my-5">
+  <header class="text-center mb-4">
+    <h1 class="text-primary">Add New Inventory Item</h1>
+    <a href="/items" class="btn btn-secondary mt-3">Back to Inventory List</a>
+  </header>
+
+  <form action="/items/add" method="POST" class="row g-4 bg-light p-4 shadow rounded">
+    <div class="col-md-6">
+      <label for="name" class="form-label">Name:</label>
+      <input type="text" id="name" name="name" class="form-control" placeholder="Enter item name" required>
+    </div>
+    <div class="col-md-6">
+      <label for="sku" class="form-label">SKU:</label>
+      <input type="text" id="sku" name="sku" class="form-control" placeholder="Enter SKU">
+    </div>
+    <div class="col-md-12">
+      <label for="description" class="form-label">Description:</label>
+      <textarea id="description" name="description" class="form-control" rows="3" placeholder="Enter item description" required></textarea>
+    </div>
+    <div class="col-md-4">
+      <label for="costPrice" class="form-label">Cost Price:</label>
+      <input type="number" id="costPrice" name="costPrice" class="form-control" placeholder="Enter cost price" required>
+    </div>
+    <div class="col-md-4">
+      <label for="sellingPrice" class="form-label">Selling Price:</label>
+      <input type="number" id="sellingPrice" name="sellingPrice" class="form-control" placeholder="Enter selling price" required>
+    </div>
+    <div class="col-md-4">
+      <label for="quantity" class="form-label">Quantity:</label>
+      <input type="number" id="quantity" name="quantity" class="form-control" placeholder="Enter quantity" required>
+    </div>
+    <div class="col-md-6">
+      <label for="category" class="form-label">Category:</label>
+      <input type="text" id="category" name="category" class="form-control" placeholder="Enter category">
+    </div>
+    <div class="col-md-6">
+      <label for="reorderLevel" class="form-label">Reorder Level:</label>
+      <input type="number" id="reorderLevel" name="reorderLevel" class="form-control" placeholder="Enter reorder level">
+    </div>
+    <div class="col-md-12">
+      <label for="image" class="form-label">Image:</label>
+      <input type="file" id="image" name="image" class="form-control" accept="image/*" required>
+      <small class="form-text text-muted">Max size: 100 KB (JPEG, PNG, or GIF).</small>
+    </div>
+    <div class="col-12 text-center">
+      <button type="submit" class="btn btn-primary px-4 py-2">Add Item</button>
+    </div>
+  </form>
+</div>
+
+<%- include('../layout/footer') %>
