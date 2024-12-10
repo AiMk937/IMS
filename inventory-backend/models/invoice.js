@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 
 const invoiceSchema = new mongoose.Schema({
   buyer: {
-    name: String,
-    address: String,
-    contactNumber: String,
-  },
+    name: { type: String, required: true },
+    address: { type: String, required: true },
+    contactNumber: { type: String, required: true },
+  },  
   items: [
     {
       itemId: mongoose.Schema.Types.ObjectId,

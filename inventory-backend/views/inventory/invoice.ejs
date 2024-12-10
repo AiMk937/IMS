@@ -1,0 +1,92 @@
+<%- include('../layout/header', { title: 'Generate Invoice' }) %>
+
+<div class="container my-5">
+  <header class="text-center mb-4">
+    <h1 class="text-primary">Generate Invoice</h1>
+    <a href="/items" class="btn btn-secondary mt-3">Back to Inventory List</a>
+  </header>
+
+  <form id="invoiceForm" class="row g-4 bg-light p-4 shadow rounded">
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th scope="col">Select</th>
+            <th scope="col">Name</th>
+            <th scope="col">Description</th>
+            <th scope="col">Price</th>
+            <th scope="col">Available Quantity</th>
+            <th scope="col">Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% items.forEach(item => { %>
+            <tr>
+              <td>
+                <input type="checkbox" name="selectedItems" value="<%= item._id %>">
+              </td>
+              <td><%= item.name || "N/A" %></td>
+              <td><%= item.description || "N/A" %></td>
+              <td>₹<%= item.sellingPrice ? item.sellingPrice.toFixed(2) : "0.00" %></td>
+              <td><%= item.quantity || 0 %></td>
+              <td>
+                <input type="number" name="quantity-<%= item._id %>" class="form-control" placeholder="Enter quantity" min="1" max="<%= item.quantity %>">
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="text-center">
+      <button type="button" id="generateInvoice" class="btn btn-primary px-4 py-2">Generate Invoice</button>
+    </div>
+  </form>
+
+  <div id="invoicePreview" class="mt-5" style="display: none;">
+    <h3>Invoice Preview</h3>
+    <div id="invoiceContent"></div>
+    <button type="button" id="downloadInvoice" class="btn btn-success mt-3">Download Invoice</button>
+  </div>
+</div>
+
+<%- include('../layout/footer') %>
+
+<script>
+  document.getElementById('generateInvoice').addEventListener('click', async () => {
+    const formData = new FormData(document.getElementById('invoiceForm'));
+    const selectedItems = formData.getAll('selectedItems');
+    if (selectedItems.length === 0) {
+      alert('Please select at least one item to generate the invoice.');
+      return;
+    }
+
+    const invoiceData = [];
+    selectedItems.forEach(itemId => {
+      const quantity = formData.get(`quantity-${itemId}`);
+      if (!quantity || quantity <= 0) {
+        alert('Please enter a valid quantity for selected items.');
+        return;
+      }
+      invoiceData.push({ itemId, quantity });
+    });
+
+    const response = await fetch('/invoice/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invoiceData }),
+    });
+
+    if (response.ok) {
+      const invoiceHtml = await response.text();
+      document.getElementById('invoicePreview').style.display = 'block';
+      document.getElementById('invoiceContent').innerHTML = invoiceHtml;
+    } else {
+      alert('Failed to generate invoice.');
+    }
+  });
+
+  document.getElementById('downloadInvoice').addEventListener('click', () => {
+    window.print();
+  });
+</script>

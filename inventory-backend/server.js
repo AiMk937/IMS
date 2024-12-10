@@ -13,22 +13,22 @@ app.use(express.json()); // Parses JSON data from requests
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Serve static files (CSS, JS, images, etc.)
+// Serve static files (CSS, JS, etc.)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve static files from the uploads folder
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
-
 // MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://aimaanjkhaan:Arshee2597@cluster1.1ycsg.mongodb.net/?retryWrites=true&w=majority';
+const MONGO_URI =
+  process.env.MONGO_URI ||
+  'mongodb+srv://aimaanjkhaan:Arshee2597@cluster1.1ycsg.mongodb.net/?retryWrites=true&w=majority';
 
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-})
+mongoose
+  .connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+  })
   .then(() => console.log('MongoDB Connected'))
-  .catch(err => {
+  .catch((err) => {
     console.error('MongoDB connection error:', err);
     process.exit(1); // Exit the process if connection fails
   });
@@ -36,6 +36,10 @@ mongoose.connect(MONGO_URI, {
 // Routes for handling inventory-related requests
 const itemRoutes = require('./routes/itemRoutes');
 app.use('/items', itemRoutes);
+
+// Routes for invoice generation
+const invoiceRoutes = require('./routes/invoiceRoutes');
+app.use('/invoice', invoiceRoutes);
 
 // Root route for redirecting to inventory list
 app.get('/', (req, res) => {

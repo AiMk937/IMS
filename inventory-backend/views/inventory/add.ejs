@@ -6,7 +6,7 @@
     <a href="/items" class="btn btn-secondary mt-3">Back to Inventory List</a>
   </header>
 
-  <form action="/items/add" method="POST" class="row g-4 bg-light p-4 shadow rounded">
+  <form action="/items/add" method="POST" enctype="multipart/form-data" class="row g-4 bg-light p-4 shadow rounded">
     <div class="col-md-6">
       <label for="name" class="form-label">Name:</label>
       <input type="text" id="name" name="name" class="form-control" placeholder="Enter item name" required>
