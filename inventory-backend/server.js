@@ -19,7 +19,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // MongoDB Connection
 const MONGO_URI =
   process.env.MONGO_URI ||
-  'mongodb+srv://aimaanjkhaan:Arshee2597@cluster1.1ycsg.mongodb.net/?retryWrites=true&w=majority';
+  ';
 
 mongoose
   .connect(MONGO_URI, {
