@@ -21,10 +21,12 @@ header a {
   color: white;
   text-decoration: none;
   margin-left: 1rem;
+  transition: color 0.3s ease;
 }
 
 header a:hover {
   text-decoration: underline;
+  color: #ffc107;
 }
 
 /* Heading Styles */
@@ -48,6 +50,13 @@ form .form-label {
 
 form .form-control {
   border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.3s ease;
+}
+
+form .form-control:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
 form button {
@@ -57,6 +66,8 @@ form button {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
 }
 
 form button:hover {
@@ -74,6 +85,7 @@ form button:hover {
 .table td {
   text-align: center;
   vertical-align: middle;
+  padding: 0.75rem;
 }
 
 .table th {
@@ -82,7 +94,7 @@ form button:hover {
 }
 
 .table-striped tbody tr:nth-of-type(odd) {
-  background-color: #f2f2f2;
+  background-color: #f8f9fa;
 }
 
 .table-hover tbody tr:hover {
@@ -94,11 +106,13 @@ form button:hover {
   padding: 0.5rem 1rem;
   border-radius: 5px;
   font-size: 0.9rem;
+  font-weight: bold;
 }
 
 .btn-success {
   background-color: #28a745;
   border: none;
+  transition: background-color 0.3s ease;
 }
 
 .btn-success:hover {
@@ -109,6 +123,7 @@ form button:hover {
   background-color: #ffc107;
   border: none;
   color: black;
+  transition: background-color 0.3s ease;
 }
 
 .btn-warning:hover {
@@ -118,6 +133,7 @@ form button:hover {
 .btn-danger {
   background-color: #dc3545;
   border: none;
+  transition: background-color 0.3s ease;
 }
 
 .btn-danger:hover {
@@ -129,11 +145,70 @@ footer {
   background-color: #343a40;
   color: white;
   text-align: center;
-  padding: 1rem 0;
+  padding: 1.5rem 0;
   margin-top: 2rem;
+  font-size: 1rem;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
 }
 
 footer p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+footer p:hover {
+  opacity: 1;
+}
+
+/* Card Buttons on Home Page */
+.home-buttons .btn {
+  font-size: 1.2rem;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.home-buttons .btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Enhancing Visibility */
+.text-muted {
+  color: #6c757d !important;
+}
+
+
+/* Button styles for homepage */
+.btn {
+  text-align: center;
+  font-weight: bold;
+}
+
+.btn h5 {
+  margin: 0;
+  color: white;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  transition: all 0.3s ease-in-out;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+.btn-warning:hover {
+  background-color: #e0a800;
+}
+
+.btn-info:hover {
+  background-color: #117a8b;
 }

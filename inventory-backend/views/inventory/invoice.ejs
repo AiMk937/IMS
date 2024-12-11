@@ -7,11 +7,27 @@
   </header>
 
   <form id="invoiceForm" class="row g-4 bg-light p-4 shadow rounded">
-    <div class="table-responsive">
+    <div class="row">
+      <div class="col-md-6">
+        <label for="buyerName" class="form-label">Buyer Name:</label>
+        <input type="text" id="buyerName" class="form-control" placeholder="Enter buyer's name" required>
+      </div>
+      <div class="col-md-6">
+        <label for="buyerContact" class="form-label">Buyer Contact Number:</label>
+        <input type="text" id="buyerContact" class="form-control" placeholder="Enter contact number" required>
+      </div>
+      <div class="col-12">
+        <label for="buyerAddress" class="form-label">Buyer Address:</label>
+        <textarea id="buyerAddress" class="form-control" rows="3" placeholder="Enter buyer's address" required></textarea>
+      </div>
+    </div>
+
+    <div class="table-responsive mt-4">
       <table class="table table-striped table-hover">
         <thead class="table-dark">
           <tr>
             <th scope="col">Select</th>
+            <th scope="col">Image</th>
             <th scope="col">Name</th>
             <th scope="col">Description</th>
             <th scope="col">Price</th>
@@ -21,18 +37,32 @@
         </thead>
         <tbody>
           <% items.forEach(item => { %>
-            <tr>
-              <td>
-                <input type="checkbox" name="selectedItems" value="<%= item._id %>">
-              </td>
-              <td><%= item.name || "N/A" %></td>
-              <td><%= item.description || "N/A" %></td>
-              <td>₹<%= item.sellingPrice ? item.sellingPrice.toFixed(2) : "0.00" %></td>
-              <td><%= item.quantity || 0 %></td>
-              <td>
-                <input type="number" name="quantity-<%= item._id %>" class="form-control" placeholder="Enter quantity" min="1" max="<%= item.quantity %>">
-              </td>
-            </tr>
+          <tr>
+            <td>
+              <input type="checkbox" name="selectedItems" value="<%= item._id %>">
+            </td>
+            <td>
+              <% if (item.imageBase64) { %>
+              <img src="<%= item.imageBase64 %>" alt="Item Image" class="img-thumbnail" style="width: 100px; height: auto;">
+              <% } else { %>
+              <span class="text-muted">No Image</span>
+              <% } %>
+            </td>
+            <td>
+              <%= item.name || "N/A" %>
+            </td>
+            <td>
+              <%= item.description || "N/A" %>
+            </td>
+            <td>₹<%= item.sellingPrice ? item.sellingPrice.toFixed(2) : "0.00" %></td>
+            <td>
+              <%= item.quantity || 0 %>
+            </td>
+            <td>
+              <input type="number" name="quantity-<%= item._id %>" class="form-control" placeholder="Enter quantity" min="1"
+                max="<%= item.quantity %>">
+            </td>
+          </tr>
           <% }) %>
         </tbody>
       </table>
@@ -42,18 +72,60 @@
       <button type="button" id="generateInvoice" class="btn btn-primary px-4 py-2">Generate Invoice</button>
     </div>
   </form>
+</div>
 
-  <div id="invoicePreview" class="mt-5" style="display: none;">
-    <h3>Invoice Preview</h3>
-    <div id="invoiceContent"></div>
-    <button type="button" id="downloadInvoice" class="btn btn-success mt-3">Download Invoice</button>
+<div id="invoicePreview" class="mt-5" style="display: none;">
+  <h3 class="text-center">Invoice</h3>
+  <div id="invoiceContent" style="padding: 20px; border: 1px solid #ddd; width: 80%; margin: auto;">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <h2>AK GLOBAL</h2>
+      <p>Flat no. 5 New Light Building, Kalina, Mumbai. 400029</p>
+      <p>Contact: 1234567890 | Email: brand@example.com</p>
+    </div>
+    <hr>
+    <div style="margin-bottom: 20px;">
+      <h4>Bill To:</h4>
+      <p id="buyerDetails"></p>
+    </div>
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background-color: #f8f8f8;">
+          <th style="border: 1px solid #ddd; padding: 8px;">Name</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Description</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Quantity</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Price</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody id="invoiceItems"></tbody>
+    </table>
+    <div style="margin-top: 20px; text-align: right;">
+      <h4>Total: ₹<span id="invoiceTotal">0.00</span></h4>
+    </div>
+    <hr>
+    <div style="text-align: center; margin-top: 20px;">
+      <p>Thank you for your purchase!</p>
+      <p>If you have any questions, contact us at brand@example.com</p>
+    </div>
   </div>
+  <button type="button" id="downloadInvoice" class="btn btn-success mt-3">Download Invoice</button>
 </div>
 
 <%- include('../layout/footer') %>
 
 <script>
   document.getElementById('generateInvoice').addEventListener('click', async () => {
+    const buyerDetails = {
+      name: document.getElementById('buyerName').value,
+      address: document.getElementById('buyerAddress').value,
+      contactNumber: document.getElementById('buyerContact').value,
+    };
+
+    if (!buyerDetails.name || !buyerDetails.address || !buyerDetails.contactNumber) {
+      alert('Please fill in all buyer details.');
+      return;
+    }
+
     const formData = new FormData(document.getElementById('invoiceForm'));
     const selectedItems = formData.getAll('selectedItems');
     if (selectedItems.length === 0) {
@@ -74,7 +146,7 @@
     const response = await fetch('/invoice/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ invoiceData }),
+      body: JSON.stringify({ invoiceData, buyerDetails }),
     });
 
     if (response.ok) {
@@ -87,6 +159,30 @@
   });
 
   document.getElementById('downloadInvoice').addEventListener('click', () => {
-    window.print();
+    printDiv('invoiceContent');
   });
+
+  function printDiv(divId) {
+    const printWindow = window.open('', '', 'width=800,height=600');
+    const divContents = document.getElementById(divId).innerHTML;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Invoice</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+          </style>
+        </head>
+        <body>
+          ${divContents}
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.print();
+  }
 </script>

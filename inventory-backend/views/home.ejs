@@ -1,0 +1,37 @@
+<%- include('./layout/header', { title: 'Home' }) %>
+
+<div class="container my-5">
+  <header class="text-center mb-5">
+    <h1 class="display-4 fw-bold">Welcome to the Inventory Management System</h1>
+    <p class="lead ">Simplify inventory tracking, manage invoices, and streamline your business operations.</p>
+  </header>
+
+  <div class="row g-4">
+    <div class="col-lg-3 col-md-6 text-center">
+      <a href="/items" class="btn btn-primary btn-lg w-100 py-4 shadow-sm rounded">
+        <i class="bi bi-boxes fs-1"></i>
+        <h5 class="mt-2">View Inventory</h5>
+      </a>
+    </div>
+    <div class="col-lg-3 col-md-6 text-center">
+      <a href="/items/add" class="btn btn-success btn-lg w-100 py-4 shadow-sm rounded">
+        <i class="bi bi-plus-square fs-1"></i>
+        <h5 class="mt-2">Add New Item</h5>
+      </a>
+    </div>
+    <div class="col-lg-3 col-md-6 text-center">
+      <a href="/invoice" class="btn btn-warning btn-lg w-100 py-4 shadow-sm rounded">
+        <i class="bi bi-receipt fs-1"></i>
+        <h5 class="mt-2">Generate Invoice</h5>
+      </a>
+    </div>
+    <div class="col-lg-3 col-md-6 text-center">
+      <a href="/invoice/view" class="btn btn-info btn-lg w-100 py-4 shadow-sm rounded">
+        <i class="bi bi-list-task fs-1"></i>
+        <h5 class="mt-2">View All Invoices</h5>
+      </a>
+    </div>
+  </div>
+</div>
+
+<%- include('./layout/footer') %>

@@ -1,0 +1,90 @@
+<%- include('../layout/header', { title: 'Invoice Details' }) %>
+
+<div class="container my-5">
+  <header class="text-center mb-4">
+    <h1 class="text-primary">Invoice Details</h1>
+    <a href="/invoice/view" class="btn btn-secondary mt-3">Back to All Invoices</a>
+  </header>
+
+  <div id="invoiceContent" style="border: 1px solid #ddd; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <h2>AK GLOBAL</h2>
+      <p>Flat no. 5 New Light Building, Kalina, Mumbai. 400029</p>
+      <p>Contact: 7738255001 | Email: akglobal937@gmail.com</p>
+    </div>
+    <hr>
+    <div style="margin-bottom: 20px;">
+      <h4>Invoice Number: <%= invoice.invoiceNumber %></h4>
+      <h4>Bill To:</h4>
+      <p>
+        Name: <%= invoice.buyer.name %> <br>
+        Address: <%= invoice.buyer.address %> <br>
+        Contact Number: <%= invoice.buyer.contactNumber %>
+      </p>
+    </div>
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background-color: #f8f8f8;">
+          <th style="border: 1px solid #ddd; padding: 8px;">Name</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Quantity</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Price</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% invoice.items.forEach(item => { %>
+          <tr>
+            <td style="border: 1px solid #ddd; padding: 8px;"><%= item.name %></td>
+            <td style="border: 1px solid #ddd; padding: 8px;"><%= item.quantity %></td>
+            <td style="border: 1px solid #ddd; padding: 8px;">₹<%= item.price.toFixed(2) %></td>
+            <td style="border: 1px solid #ddd; padding: 8px;">₹<%= item.total.toFixed(2) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <div style="margin-top: 20px; text-align: right;">
+      <h4>Total: ₹<%= invoice.totalAmount.toFixed(2) %></h4>
+    </div>
+    <hr>
+    <div style="text-align: center; margin-top: 20px;">
+      <p>Thank you for your purchase!</p>
+      <p>If you have any questions, contact us at brand@example.com</p>
+    </div>
+  </div>
+
+  <div class="text-center mt-4">
+    <button type="button" id="downloadInvoice" class="btn btn-success">Download Invoice</button>
+  </div>
+</div>
+
+<%- include('../layout/footer') %>
+
+<script>
+  document.getElementById('downloadInvoice').addEventListener('click', () => {
+    printDiv('invoiceContent');
+  });
+
+  function printDiv(divId) {
+    const printWindow = window.open('', '', 'width=800,height=600');
+    const divContents = document.getElementById(divId).innerHTML;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Invoice</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+          </style>
+        </head>
+        <body>
+          ${divContents}
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.print();
+  }
+</script>

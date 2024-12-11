@@ -42,9 +42,15 @@ const invoiceRoutes = require('./routes/invoiceRoutes');
 app.use('/invoice', invoiceRoutes);
 
 // Root route for redirecting to inventory list
-app.get('/', (req, res) => {
+app.get('/items', (req, res) => {
   res.redirect('/items');
 });
+
+// Home Page Route
+app.get('/', (req, res) => {
+  res.render('home'); // Render the home.ejs view
+});
+
 
 // Handle unknown routes (404)
 app.use((req, res) => {

@@ -1,39 +1,109 @@
 const express = require('express');
 const router = express.Router();
 const Item = require('../models/item');
+const Invoice = require('../models/invoice'); // Import the Invoice model
 
-router.post('/invoice/generate', async (req, res) => {
-  const { invoiceData } = req.body;
+// Route: Render invoice generation page
+router.get('/', async (req, res) => {
+  try {
+    // Fetch all items from the database
+    const items = await Item.find();
 
-  if (!invoiceData || invoiceData.length === 0) {
-    return res.status(400).send('No items provided for invoice.');
+    // Convert image buffer to Base64 for display
+    const itemsWithImages = items.map((item) => ({
+      ...item._doc,
+      imageBase64: item.image
+        ? `data:${item.image.contentType};base64,${item.image.data.toString('base64')}`
+        : null,
+    }));
+
+    // Render the invoice generation page and pass the items with base64 image
+    res.render('inventory/invoice', { items: itemsWithImages });
+  } catch (err) {
+    console.error('Error loading invoice page:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Route: Generate and save invoice
+router.post('/generate', async (req, res) => {
+  const { invoiceData, buyerDetails } = req.body;
+
+  // Validate input data
+  if (!invoiceData || !Array.isArray(invoiceData) || invoiceData.length === 0) {
+    return res.status(400).json({ error: 'No items provided for invoice.' });
+  }
+
+  if (!buyerDetails || !buyerDetails.name || !buyerDetails.address || !buyerDetails.contactNumber) {
+    return res.status(400).json({ error: 'Buyer details are incomplete.' });
   }
 
   try {
-    // Log invoiceData to verify its structure
-    console.log('Invoice Data:', invoiceData);
+    // Fetch items from the database based on itemIds
+    const itemIds = invoiceData.map(data => data.itemId);
+    const items = await Item.find({ _id: { $in: itemIds } });
 
-    // Find the items in the database based on itemIds in the invoiceData
-    const items = await Item.find({ _id: { $in: invoiceData.map(data => data.itemId) } });
-
-    // Log the retrieved items
-    console.log('Items found:', items);
-
-    if (items.length === 0) {
-      return res.status(404).send('No items found in the inventory for the given IDs.');
+    if (!items || items.length === 0) {
+      return res.status(404).json({ error: 'No items found in the inventory for the given IDs.' });
     }
 
-    let total = 0;
+    // Prepare the invoice items and calculate total
+    let totalAmount = 0;
     const invoiceItems = items.map(item => {
-      const quantity = invoiceData.find(data => data.itemId === item._id.toString()).quantity;
-      const subtotal = quantity * item.sellingPrice;
-      total += subtotal;
+      const matchingData = invoiceData.find(data => data.itemId === item._id.toString());
+      const quantity = parseInt(matchingData?.quantity, 10);
 
-      return { ...item._doc, quantity, subtotal };
+      if (!quantity || quantity <= 0) {
+        throw new Error(`Invalid quantity for item ${item.name}`);
+      }
+
+      const total = quantity * item.sellingPrice;
+      totalAmount += total;
+
+      return {
+        itemId: item._id,
+        name: item.name,
+        description: item.description,
+        quantity,
+        price: item.sellingPrice,
+        total,
+      };
     });
 
+    // Fetch the last invoice number and increment
+    const lastInvoice = await Invoice.findOne().sort({ _id: -1 }).select('invoiceNumber');
+    const nextInvoiceNumber = lastInvoice
+      ? String(parseInt(lastInvoice.invoiceNumber, 10) + 1).padStart(5, '0')
+      : '00001';
+
+    // Save the invoice to the database
+    const newInvoice = new Invoice({
+      invoiceNumber: nextInvoiceNumber,
+      buyer: buyerDetails,
+      items: invoiceItems,
+      totalAmount,
+    });
+
+    await newInvoice.save();
+
+    // Generate HTML for the invoice
     const invoiceHtml = `
-      <table class="table">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2>AK GLOBAL</h2>
+        <p>Flat no. 5 New Light Building, Kalina, Mumbai. 400029</p>
+        <p>Contact: 7738255001 | Email: akglobal937@gmail.com</p>
+      </div>
+      <hr>
+      <div style="margin-bottom: 20px;">
+        <h4>Invoice Number: ${nextInvoiceNumber}</h4>
+        <h4>Bill To:</h4>
+        <p>
+          Name: ${buyerDetails.name} <br>
+          Address: ${buyerDetails.address} <br>
+          Contact Number: ${buyerDetails.contactNumber}
+        </p>
+      </div>
+      <table class="table" style="width: 100%; border-collapse: collapse;">
         <thead>
           <tr>
             <th>Name</th>
@@ -49,10 +119,10 @@ router.post('/invoice/generate', async (req, res) => {
               item => `
             <tr>
               <td>${item.name}</td>
-              <td>${item.description}</td>
+              <td>${item.description || 'N/A'}</td>
               <td>${item.quantity}</td>
-              <td>₹${item.sellingPrice.toFixed(2)}</td>
-              <td>₹${item.subtotal.toFixed(2)}</td>
+              <td>₹${item.price.toFixed(2)}</td>
+              <td>₹${item.total.toFixed(2)}</td>
             </tr>
           `
             )
@@ -60,16 +130,51 @@ router.post('/invoice/generate', async (req, res) => {
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="4" class="text-end">Total:</td>
-            <td>₹${total.toFixed(2)}</td>
+            <td colspan="4" style="text-align: right;"><strong>Total:</strong></td>
+            <td>₹${totalAmount.toFixed(2)}</td>
           </tr>
         </tfoot>
       </table>
+      <hr>
+      <p>Thank you for your purchase!</p>
     `;
 
-    res.send(invoiceHtml);
+    // Send the generated invoice HTML as the response
+    res.status(200).send(invoiceHtml);
   } catch (err) {
-    console.error('Error generating invoice:', err);
+    console.error('Error generating invoice:', err.message);
+    res.status(500).json({ error: `Failed to generate invoice: ${err.message}` });
+  }
+});
+
+// Route: View all invoices
+router.get('/view', async (req, res) => {
+  try {
+    // Fetch all invoices from the database
+    const invoices = await Invoice.find().sort({ date: -1 }); // Sort by most recent
+
+    // Render the invoices page and pass the data
+    res.render('inventory/invoices', { invoices });
+  } catch (err) {
+    console.error('Error fetching invoices:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Route: View single invoice
+router.get('/view/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const invoice = await Invoice.findById(id);
+
+    if (!invoice) {
+      return res.status(404).send('Invoice not found');
+    }
+
+    // Render a page or return invoice data
+    res.render('inventory/invoiceDetails', { invoice });
+  } catch (err) {
+    console.error('Error fetching invoice:', err);
     res.status(500).send('Internal Server Error');
   }
 });
