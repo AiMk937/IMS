@@ -24,26 +24,30 @@ const upload = multer({
 // Route: List all items
 router.get('/', async (req, res) => {
   try {
-    const items = await Item.find(); // Fetch all items from the database
+    const selectedCategory = req.query.category || ''; // Get selected category from query
+    const categories = ['Beauty Products', 'Clothing', 'Clutchers', 'Electronics', 'Hairbands', 'Headbands', 'Caps', 'Scrunchie', 'Toys', 'Other'].sort(); // Predefined categories
 
-    // Convert image buffer to Base64 for display
-    const itemsWithImages = items.map((item) => ({
-      ...item._doc,
-      imageBase64: item.image
-        ? `data:${item.image.contentType};base64,${item.image.data.toString('base64')}`
-        : null,
-    }));
+    let query = {}; // Query object to filter items
 
-    res.render('inventory/list', { items: itemsWithImages }); // Render the EJS view and pass items
+    if (selectedCategory) {
+      query.category = selectedCategory; // Filter by category if provided
+    }
+
+    const items = await Item.find(query); // Fetch items with optional category filter
+
+    res.render('inventory/list', { items, categories, selectedCategory }); // Pass items and categories to the view
   } catch (err) {
     console.error('Error fetching items:', err);
     res.status(500).send('Internal Server Error');
   }
 });
 
+
 // Route: Show add page for a new item
 router.get('/add', (req, res) => {
-  res.render('inventory/add', { item: {} }); // Render the add page with an empty item object
+  // Predefined categories
+  const categories = ['Beauty Products', 'Clothing', 'Clutchers', 'Electronics', 'Hairbands', 'Headbands', 'Caps', 'Scrunchie', 'Toys', 'Other'].sort();
+  res.render('inventory/add', { item: {}, categories }); // Pass categories to the EJS view
 });
 
 // Route: Add a new item
@@ -67,7 +71,7 @@ router.post('/add', upload.single('image'), async (req, res) => {
       sellingPrice: parseFloat(sellingPrice),
       quantity: parseInt(quantity, 10),
       sku,
-      category,
+      category,  // Store the selected or custom category
       reorderLevel: parseInt(reorderLevel, 10),
     });
 
@@ -87,7 +91,6 @@ router.post('/add', upload.single('image'), async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
 
 // Route: Show edit page for an item
 router.get('/edit/:id', async (req, res) => {

@@ -1,0 +1,44 @@
+<%- include('../layout/header', { title: 'Packaging Materials' }) %>
+
+<div class="container my-5">
+  <header class="text-center mb-4">
+    <h1 class="text-primary">Packaging Materials</h1>
+    <a href="/packaging/add-packaging" class="btn btn-success mt-3">Add New Packaging Material</a>
+  </header>
+
+  <% if (materials.length > 0) { %>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Category</th>
+            <th scope="col">Cost (₹)</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Reorder Level</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% materials.forEach(material => { %>
+            <tr>
+              <td><%= material.name || "N/A" %></td>
+              <td><%= material.category || "N/A" %></td>
+              <td>₹<%= material.cost.toFixed(2) || "0.00" %></td>
+              <td><%= material.quantity || 0 %></td>
+              <td><%= material.reorderLevel || 0 %></td>
+              <td>
+                <a href="/packaging/edit/<%= material._id %>" class="btn btn-warning btn-sm">Edit</a>
+                <a href="/packaging/delete/<%= material._id %>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this material?')">Delete</a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <p class="text-center text-muted">No packaging materials found. <a href="/packaging/add-packaging" class="text-primary">Add a new packaging material</a>.</p>
+  <% } %>
+</div>
+
+<%- include('../layout/footer') %>

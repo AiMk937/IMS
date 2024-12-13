@@ -33,7 +33,12 @@
     </div>
     <div class="col-md-6">
       <label for="category" class="form-label">Category:</label>
-      <input type="text" id="category" name="category" class="form-control" placeholder="Enter category">
+      <select id="category" name="category" class="form-control" required>
+        <option value="">Select Category</option>
+        <% categories.forEach(category => { %>
+          <option value="<%= category %>"><%= category %></option>
+        <% }) %>
+      </select>
     </div>
     <div class="col-md-6">
       <label for="reorderLevel" class="form-label">Reorder Level:</label>

@@ -1,0 +1,38 @@
+<%- include('../layout/header', { title: 'Add Packaging to Invoice' }) %>
+
+<div class="container my-5">
+  <header class="text-center mb-4">
+    <h1 class="text-primary">Add Packaging to Invoice</h1>
+    <a href="/items" class="btn btn-secondary mt-3">Back to Inventory List</a>
+  </header>
+
+  <form action="/items/add-packaging" method="POST" class="row g-4 bg-light p-4 shadow rounded">
+    <div class="col-md-6">
+      <label for="invoiceId" class="form-label">Select Invoice:</label>
+      <select id="invoiceId" name="invoiceId" class="form-control" required>
+        <option value="">Select Invoice</option>
+        <% invoices.forEach(invoice => { %>
+          <option value="<%= invoice._id %>">Invoice #<%= invoice._id %> - <%= invoice.buyer.name %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <h5>Packaging Materials:</h5>
+    <% packagingMaterials.forEach(material => { %>
+      <div class="col-md-6">
+        <input type="checkbox" name="packagingMaterials[<%= material._id %>]" value="<%= material._id %>">
+        <%= material.name %> - ₹<%= material.cost %>
+        <% if (material.category === 'shipping box') { %>
+          (Dimensions: <%= material.dimensions ? material.dimensions.length : 'N/A' %> x <%= material.dimensions ? material.dimensions.width : 'N/A' %> x <%= material.dimensions ? material.dimensions.height : 'N/A' %>)
+        <% } %>
+        <input type="number" name="packagingMaterials[<%= material._id %>][quantityUsed]" min="1" placeholder="Enter quantity" class="form-control mt-2">
+      </div>
+    <% }) %>
+
+    <div class="col-12 text-center">
+      <button type="submit" class="btn btn-primary px-4 py-2">Submit Packaging Details</button>
+    </div>
+  </form>
+</div>
+
+<%- include('../layout/footer') %>

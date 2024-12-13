@@ -41,10 +41,10 @@ app.use('/items', itemRoutes);
 const invoiceRoutes = require('./routes/invoiceRoutes');
 app.use('/invoice', invoiceRoutes);
 
-// Root route for redirecting to inventory list
-app.get('/items', (req, res) => {
-  res.redirect('/items');
-});
+// Routes for packaging material
+const packagingMaterialRoutes = require('./routes/PackagingMaterialRoutes'); // Add packaging material routes
+app.use('/packaging', packagingMaterialRoutes); // Add packaging routes
+
 
 // Home Page Route
 app.get('/', (req, res) => {

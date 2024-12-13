@@ -212,3 +212,10 @@ footer p:hover {
 .btn-info:hover {
   background-color: #117a8b;
 }
+
+/* Navbar Styling */
+
+.navbar-brand {
+  font-size: 1.75rem; /* Increase font size of brand */
+  font-weight: bold;
+}

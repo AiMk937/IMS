@@ -6,6 +6,18 @@
     <a href="/items/add" class="btn btn-success">Add New Item</a>
   </header>
 
+  <form action="/items" method="GET">
+    <div class="col-md-6">
+      <label for="category" class="form-label">Filter by Category:</label>
+      <select name="category" class="form-control" onchange="this.form.submit()">
+        <option value="">Select Category</option>
+        <% categories.forEach(category => { %>
+          <option value="<%= category %>" <%= selectedCategory === category ? 'selected' : '' %>><%= category %></option>
+        <% }) %>
+      </select>
+    </div>
+  </form>
+
   <main>
     <% if (items.length > 0) { %>
       <div class="table-responsive">

@@ -1,0 +1,109 @@
+<%- include('../layout/header', { title: 'Add Packaging Material' }) %>
+
+<div class="container my-5">
+  <header class="text-center mb-4">
+    <h1 class="text-primary">Add New Packaging Material</h1>
+    <a href="/packaging" class="btn btn-secondary mt-3">Back to Packaging Materials</a>
+  </header>
+
+  <form action="/packaging/add-packaging" method="POST" enctype="multipart/form-data" class="row g-4 bg-light p-4 shadow rounded">
+    
+    <!-- Material Name -->
+    <div class="col-md-6">
+      <label for="name" class="form-label">Name:</label>
+      <input type="text" id="name" name="name" class="form-control" placeholder="Enter material name" required>
+    </div>
+    
+    <!-- Material Category (dropdown) -->
+    <div class="col-md-6">
+      <label for="category" class="form-label">Category:</label>
+      <select id="category" name="category" class="form-control" required>
+        <option value="">Select Category</option>
+        <option value="box">Box</option>
+        <option value="shipping box">Shipping Box</option>
+        <option value="shipping bag">Shipping Bag</option>
+        <option value="plastic">Plastic</option>
+      </select>
+    </div>
+
+    <!-- Cost -->
+    <div class="col-md-6">
+      <label for="cost" class="form-label">Cost (₹):</label>
+      <input type="number" id="cost" name="cost" class="form-control" placeholder="Enter cost" required>
+    </div>
+    
+    <!-- Quantity -->
+    <div class="col-md-6">
+      <label for="quantity" class="form-label">Quantity:</label>
+      <input type="number" id="quantity" name="quantity" class="form-control" placeholder="Enter quantity" required>
+    </div>
+
+    <!-- Reorder Level -->
+    <div class="col-md-6">
+      <label for="reorderLevel" class="form-label">Reorder Level:</label>
+      <input type="number" id="reorderLevel" name="reorderLevel" class="form-control" placeholder="Enter reorder level" required>
+    </div>
+
+    <!-- Dimensions (only for shipping box) -->
+    <div id="shippingBoxDimensions" style="display:none;">
+      <div class="col-md-4">
+        <label for="length" class="form-label">Length (cm):</label>
+        <input type="number" id="length" name="dimensions[length]" class="form-control" placeholder="Enter length" min="1">
+      </div>
+      <div class="col-md-4">
+        <label for="width" class="form-label">Width (cm):</label>
+        <input type="number" id="width" name="dimensions[width]" class="form-control" placeholder="Enter width" min="1">
+      </div>
+      <div class="col-md-4">
+        <label for="height" class="form-label">Height (cm):</label>
+        <input type="number" id="height" name="dimensions[height]" class="form-control" placeholder="Enter height" min="1">
+      </div>
+    </div>
+
+    <div class="col-12 text-center">
+      <button type="submit" class="btn btn-primary px-4 py-2">Add Material</button>
+    </div>
+  </form>
+</div>
+
+<%- include('../layout/footer') %>
+
+<script>
+  // Show the dimensions fields only if "Shipping Box" is selected
+  document.getElementById('category').addEventListener('change', function () {
+    const category = this.value;
+    const shippingBoxDimensions = document.getElementById('shippingBoxDimensions');
+    if (category === 'shipping box') {
+      shippingBoxDimensions.style.display = 'block';
+    } else {
+      shippingBoxDimensions.style.display = 'none';
+    }
+  });
+
+  // Client-side validation for required fields
+  document.querySelector("form").addEventListener("submit", function(e) {
+    const cost = document.querySelector("#cost").value;
+    const quantity = document.querySelector("#quantity").value;
+    const reorderLevel = document.querySelector("#reorderLevel").value;
+    const category = document.querySelector("#category").value;
+    
+    // Check if numeric fields are not empty and are valid numbers
+    if (isNaN(cost) || isNaN(quantity) || isNaN(reorderLevel) || !cost || !quantity || !reorderLevel) {
+      e.preventDefault();
+      alert("Please fill out all fields correctly.");
+      return;
+    }
+
+    // If category is shipping box, check if dimensions are also filled
+    if (category === 'shipping box') {
+      const length = document.querySelector("#length").value;
+      const width = document.querySelector("#width").value;
+      const height = document.querySelector("#height").value;
+      if (!length || !width || !height) {
+        e.preventDefault();
+        alert("Please fill in all dimensions for the shipping box.");
+        return;
+      }
+    }
+  });
+</script>
