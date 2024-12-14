@@ -17,7 +17,7 @@
       </select>
     </div>
   </form>
-
+<br>
   <main>
     <% if (items.length > 0) { %>
       <div class="table-responsive">
@@ -38,9 +38,9 @@
               <tr>
                 <td>
                   <% if (item.imageBase64) { %>
-                    <img src="<%= item.imageBase64 %>" alt="Item Image" class="img-thumbnail" style="width: 100px; height: auto;">
+                  <img src="<%= item.imageBase64 %>" alt="Item Image" class="img-thumbnail" style="width: 100px; height: auto;">
                   <% } else { %>
-                    <span class="text-muted">No Image</span>
+                  <span class="text-muted">No Image</span>
                   <% } %>
                 </td>
                 <td><%= item.name || "N/A" %></td>

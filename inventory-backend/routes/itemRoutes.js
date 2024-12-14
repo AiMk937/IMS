@@ -33,9 +33,18 @@ router.get('/', async (req, res) => {
       query.category = selectedCategory; // Filter by category if provided
     }
 
-    const items = await Item.find(query); // Fetch items with optional category filter
+    // Fetch items with optional category filter
+    const items = await Item.find(query);
 
-    res.render('inventory/list', { items, categories, selectedCategory }); // Pass items and categories to the view
+    // Convert image buffer to Base64 for each item
+    const itemsWithImages = items.map((item) => ({
+      ...item._doc, // Spread the existing item fields
+      imageBase64: item.image
+        ? `data:${item.image.contentType};base64,${item.image.data.toString('base64')}`
+        : null, // Convert image to Base64 or null if no image
+    }));
+
+    res.render('inventory/list', { items: itemsWithImages, categories, selectedCategory }); // Pass items with Base64 images to the view
   } catch (err) {
     console.error('Error fetching items:', err);
     res.status(500).send('Internal Server Error');

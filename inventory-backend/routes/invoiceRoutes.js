@@ -25,7 +25,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Route: Generate and save invoice
 router.post('/generate', async (req, res) => {
   const { invoiceData, buyerDetails } = req.body;
 
@@ -40,7 +39,7 @@ router.post('/generate', async (req, res) => {
 
   try {
     // Fetch items from the database based on itemIds
-    const itemIds = invoiceData.map(data => data.itemId);
+    const itemIds = invoiceData.map((data) => data.itemId);
     const items = await Item.find({ _id: { $in: itemIds } });
 
     if (!items || items.length === 0) {
@@ -49,26 +48,38 @@ router.post('/generate', async (req, res) => {
 
     // Prepare the invoice items and calculate total
     let totalAmount = 0;
-    const invoiceItems = items.map(item => {
-      const matchingData = invoiceData.find(data => data.itemId === item._id.toString());
+    const invoiceItems = [];
+
+    for (const item of items) {
+      const matchingData = invoiceData.find((data) => data.itemId === item._id.toString());
       const quantity = parseInt(matchingData?.quantity, 10);
 
       if (!quantity || quantity <= 0) {
         throw new Error(`Invalid quantity for item ${item.name}`);
       }
 
+      // Check if the inventory has enough quantity
+      if (item.quantity < quantity) {
+        throw new Error(`Not enough quantity for item ${item.name}. Available: ${item.quantity}`);
+      }
+
       const total = quantity * item.sellingPrice;
       totalAmount += total;
 
-      return {
+      // Add to invoice items
+      invoiceItems.push({
         itemId: item._id,
         name: item.name,
         description: item.description,
         quantity,
         price: item.sellingPrice,
         total,
-      };
-    });
+      });
+
+      // Update the item's quantity in the database
+      item.quantity -= quantity;
+      await item.save(); // Save the updated item back to the database
+    }
 
     // Fetch the last invoice number and increment
     const lastInvoice = await Invoice.findOne().sort({ _id: -1 }).select('invoiceNumber');
@@ -116,7 +127,7 @@ router.post('/generate', async (req, res) => {
         <tbody>
           ${invoiceItems
             .map(
-              item => `
+              (item) => `
             <tr>
               <td>${item.name}</td>
               <td>${item.description || 'N/A'}</td>
