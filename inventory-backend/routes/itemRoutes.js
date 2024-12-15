@@ -104,6 +104,9 @@ router.post('/add', upload.single('image'), async (req, res) => {
 // Route: Show edit page for an item
 router.get('/edit/:id', async (req, res) => {
   const { id } = req.params;
+  const categories = ['Beauty Products', 'Clothing', 'Clutchers', 'Electronics', 'Hairbands', 'Headbands', 'Caps', 'Scrunchie', 'Toys', 'Other'].sort(); // Predefined categories
+
+  console.log('Editing item with ID:', id); // Debugging log
 
   try {
     const item = await Item.findById(id); // Fetch the item by ID
@@ -114,17 +117,19 @@ router.get('/edit/:id', async (req, res) => {
     // Convert image buffer to Base64 for display
     const itemWithImage = {
       ...item._doc,
-      imageBase64: item.image
+      imageBase64: item.image && item.image.data && item.image.contentType
         ? `data:${item.image.contentType};base64,${item.image.data.toString('base64')}`
         : null,
     };
 
-    res.render('inventory/edit', { item: itemWithImage }); // Render the edit page
+    // Pass the item and categories to the view
+    res.render('inventory/edit', { item: itemWithImage, categories });
   } catch (err) {
-    console.error('Error fetching item for edit:', err);
+    console.error('Error fetching item for edit:', err.message); // Log error
     res.status(500).send('Internal Server Error');
   }
 });
+
 
 // Route: Update an item
 router.post('/edit/:id', upload.single('image'), async (req, res) => {
