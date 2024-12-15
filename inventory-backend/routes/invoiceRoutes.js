@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Item = require('../models/item');
 const Invoice = require('../models/invoice'); // Import the Invoice model
 
@@ -28,17 +29,33 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Route: Generate an invoice
 router.post('/generate', async (req, res) => {
-  const { invoiceData, buyerDetails } = req.body;
+  const { invoiceData, buyerDetails, shippingCharges } = req.body;
 
-  // Validate input data
+  console.log('Received Request Body:', req.body);
+
+  // Validate buyer details
+  if (
+    !buyerDetails ||
+    typeof buyerDetails.name !== 'string' ||
+    typeof buyerDetails.address !== 'string' ||
+    typeof buyerDetails.contactNumber !== 'string'
+  ) {
+    return res.status(400).json({ error: 'Buyer details are incomplete or invalid.' });
+  }
+
+  // Validate invoice data
   if (!invoiceData || !Array.isArray(invoiceData) || invoiceData.length === 0) {
     return res.status(400).json({ error: 'No items provided for invoice.' });
   }
 
-  if (!buyerDetails || !buyerDetails.name || !buyerDetails.address || !buyerDetails.contactNumber) {
-    return res.status(400).json({ error: 'Buyer details are incomplete.' });
+  // Validate shipping charges
+  const parsedShippingCharges = parseFloat(shippingCharges) || 0;
+  if (isNaN(parsedShippingCharges) || parsedShippingCharges < 0) {
+    return res.status(400).json({ error: 'Invalid shipping charges.' });
   }
+  console.log('Parsed Shipping Charges:', parsedShippingCharges);
 
   try {
     // Fetch items from the database based on itemIds
@@ -46,7 +63,7 @@ router.post('/generate', async (req, res) => {
     const items = await Item.find({ _id: { $in: itemIds } });
 
     if (!items || items.length === 0) {
-      return res.status(404).json({ error: 'No items found in the inventory for the given IDs.' });
+      return res.status(404).json({ error: 'None of the requested items are available in the inventory.' });
     }
 
     // Prepare the invoice items and calculate total
@@ -80,9 +97,17 @@ router.post('/generate', async (req, res) => {
       });
 
       // Update the item's quantity in the database
-      item.quantity -= quantity;
-      await item.save(); // Save the updated item back to the database
+      try {
+        item.quantity -= quantity;
+        await item.save(); // Save the updated item back to the database
+      } catch (err) {
+        console.error(`Error updating item ${item.name}:`, err.message);
+        throw new Error(`Failed to update item ${item.name}.`);
+      }
     }
+
+    // Add shipping charges to total
+    totalAmount += parsedShippingCharges;
 
     // Fetch the last invoice number and increment
     const lastInvoice = await Invoice.findOne().sort({ _id: -1 }).select('invoiceNumber');
@@ -96,6 +121,7 @@ router.post('/generate', async (req, res) => {
       buyer: buyerDetails,
       items: invoiceItems,
       totalAmount,
+      shippingCharges: parsedShippingCharges,
     });
 
     await newInvoice.save();
@@ -113,7 +139,7 @@ router.post('/generate', async (req, res) => {
       <hr>
       <div style="margin-bottom: 20px;">
         <h4>Invoice Number: ${nextInvoiceNumber}</h4>
-        <h6>Date: ${formattedDate}</h6> <!-- Add date -->
+        <h6>Date: ${formattedDate}</h6>
         <h4>Bill To:</h4>
         <p>
           Name: ${buyerDetails.name} <br>
@@ -148,6 +174,14 @@ router.post('/generate', async (req, res) => {
         </tbody>
         <tfoot>
           <tr>
+            <td colspan="4" style="text-align: right;"><strong>Subtotal:</strong></td>
+            <td>₹${(totalAmount - parsedShippingCharges).toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td colspan="4" style="text-align: right;"><strong>Shipping Charges:</strong></td>
+            <td>₹${parsedShippingCharges.toFixed(2)}</td>
+          </tr>
+          <tr>
             <td colspan="4" style="text-align: right;"><strong>Total:</strong></td>
             <td>₹${totalAmount.toFixed(2)}</td>
           </tr>
@@ -168,16 +202,11 @@ router.post('/generate', async (req, res) => {
 // Route: View all invoices
 router.get('/view', async (req, res) => {
   try {
-    // Fetch all invoices from the database
     const invoices = await Invoice.find().sort({ date: -1 }); // Sort by most recent
-
-    // Format dates for each invoice
     const invoicesWithDates = invoices.map((invoice) => ({
       ...invoice._doc,
       formattedDate: new Date(invoice.date).toLocaleDateString('en-GB'),
     }));
-
-    // Render the invoices page and pass the data
     res.render('inventory/invoices', { invoices: invoicesWithDates });
   } catch (err) {
     console.error('Error fetching invoices:', err);
@@ -185,20 +214,22 @@ router.get('/view', async (req, res) => {
   }
 });
 
-
+// Route: View specific invoice
 router.get('/view/:id', async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send('Invalid invoice ID.');
+    }
+
     const invoice = await Invoice.findById(id);
 
     if (!invoice) {
       return res.status(404).send('Invoice not found');
     }
 
-    // Format the date for display
     const formattedDate = new Date(invoice.date).toLocaleDateString('en-GB');
-
-    // Render the invoice details page
     res.render('inventory/invoiceDetails', { invoice, formattedDate });
   } catch (err) {
     console.error('Error fetching invoice:', err);

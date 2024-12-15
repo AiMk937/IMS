@@ -17,6 +17,20 @@ const invoiceSchema = new mongoose.Schema({
       total: Number,
     },
   ],
+  packagingDetails: [
+    {
+      materialId: { type: mongoose.Schema.Types.ObjectId, ref: 'PackagingMaterial' },
+      name: String,
+      quantityUsed: Number,
+      cost: Number,
+    },
+  ],
+  shippingCharges: {
+    type: Number,
+    default: 0, // Default value if no shipping charges are provided
+    required: true,
+  },
+  packagingCost: { type: Number, default: 0 },
   totalAmount: Number,
   date: { type: Date, default: Date.now },
 });

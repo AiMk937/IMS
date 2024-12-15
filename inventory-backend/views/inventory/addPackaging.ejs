@@ -6,33 +6,83 @@
     <a href="/items" class="btn btn-secondary mt-3">Back to Inventory List</a>
   </header>
 
-  <form action="/items/add-packaging" method="POST" class="row g-4 bg-light p-4 shadow rounded">
+  <form action="/packaging/add-packaging-to-invoice" method="POST" class="row g-4 bg-light p-4 shadow rounded">
     <div class="col-md-6">
-      <label for="invoiceId" class="form-label">Select Invoice:</label>
-      <select id="invoiceId" name="invoiceId" class="form-control" required>
+      <label for="invoiceNumber" class="form-label">Select Invoice:</label>
+      <select id="invoiceNumber" name="invoiceNumber" class="form-control" required>
         <option value="">Select Invoice</option>
         <% invoices.forEach(invoice => { %>
-          <option value="<%= invoice._id %>">Invoice #<%= invoice._id %> - <%= invoice.buyer.name %></option>
+          <option value="<%= invoice.invoiceNumber %>">
+            Invoice #<%= invoice.invoiceNumber %> - <%= invoice.buyer.name %>
+          </option>
         <% }) %>
       </select>
     </div>
+    
 
     <h5>Packaging Materials:</h5>
     <% packagingMaterials.forEach(material => { %>
       <div class="col-md-6">
-        <input type="checkbox" name="packagingMaterials[<%= material._id %>]" value="<%= material._id %>">
-        <%= material.name %> - ₹<%= material.cost %>
-        <% if (material.category === 'shipping box') { %>
-          (Dimensions: <%= material.dimensions ? material.dimensions.length : 'N/A' %> x <%= material.dimensions ? material.dimensions.width : 'N/A' %> x <%= material.dimensions ? material.dimensions.height : 'N/A' %>)
-        <% } %>
-        <input type="number" name="packagingMaterials[<%= material._id %>][quantityUsed]" min="1" placeholder="Enter quantity" class="form-control mt-2">
-      </div>
+        <!-- Checkbox to select packaging material -->
+        <input type="checkbox" 
+               name="packagingMaterials[<%= material._id %>][selected]" 
+               value="true">
+        <%= material.name %> - ₹<%= material.cost %> (Available: <%= material.quantity %>)
+    
+        <!-- Input for quantity -->
+        <input type="number" 
+               name="packagingMaterials[<%= material._id %>][quantityUsed]" 
+               min="1" 
+               max="<%= material.quantity %>" 
+               placeholder="Enter quantity" 
+               class="form-control mt-2">
+      </div>    
     <% }) %>
 
     <div class="col-12 text-center">
       <button type="submit" class="btn btn-primary px-4 py-2">Submit Packaging Details</button>
     </div>
   </form>
+
+  
+  <!-- List of Attached Packaging Materials -->
+  <section class="mt-5">
+    <h2 class="text-primary text-center">Packaging Materials Attached to Invoices</h2>
+  
+    <% if (invoicesWithPackaging && invoicesWithPackaging.length > 0) { %>
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th scope="col">Invoice #</th>
+              <th scope="col">Buyer</th>
+              <th scope="col">Packaging Material</th>
+              <th scope="col">Quantity Used</th>
+              <th scope="col">Cost (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% invoicesWithPackaging.forEach(invoice => { %>
+              <% if (invoice.packagingDetails && invoice.packagingDetails.length > 0) { %>
+                <% invoice.packagingDetails.forEach(detail => { %>
+                  <tr>
+                    <td>Invoice #<%= invoice.invoiceNumber %></td>
+                    <td><%= invoice.buyer && invoice.buyer.name ? invoice.buyer.name : "N/A" %></td>
+                    <td><%= detail.name %></td>
+                    <td><%= detail.quantityUsed %></td>
+                    <td>₹<%= detail.cost.toFixed(2) %></td>
+                  </tr>
+                <% }) %>
+              <% } %>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p class="text-center text-muted">No packaging materials have been attached to any invoices yet.</p>
+    <% } %>
+  </section>
+  
 </div>
 
 <%- include('../layout/footer') %>

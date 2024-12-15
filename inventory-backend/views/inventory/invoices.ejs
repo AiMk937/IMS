@@ -10,25 +10,27 @@
     <table class="table table-striped table-hover">
       <thead class="table-dark">
         <tr>
-          <th scope="col">Invoice Number</th>
-          <th scope="col">Buyer Name</th>
-          <th scope="col">Date</th>
-          <th scope="col">Total Amount</th>
-          <th scope="col">Actions</th>
+          <th>Invoice Number</th>
+          <th>Buyer Name</th>
+          <th>Date</th>
+          <th>Total Amount</th>
+          <th>Profit</th>
+          <th>Actions</th>
         </tr>
-      </thead>
-      <tbody>
-        <% invoices.forEach(invoice => { %>
+        <% invoices.forEach((invoice) => { %>
           <tr>
             <td><%= invoice.invoiceNumber %></td>
             <td><%= invoice.buyer.name %></td>
-            <td><%= new Date(invoice.date).toLocaleDateString() %></td>
+            <td><%= new Date(invoice.date).toLocaleDateString('en-GB') %></td>
             <td>₹<%= invoice.totalAmount.toFixed(2) %></td>
+            <td>₹<%= (
+              invoice.totalAmount - shippingCharges - 20 // Include profit calculation
+            ).toFixed(2) %></td>
             <td>
-              <a href="/invoice/view/<%= invoice._id %>" class="btn btn-info btn-sm">View</a>
+              <a href="/invoice/view/<%= invoice._id %>" class="btn btn-primary btn-sm">View</a>
             </td>
           </tr>
-        <% }) %>
+        <% }); %>        
       </tbody>
     </table>
   </div>
