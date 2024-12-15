@@ -17,15 +17,15 @@
           <th>Profit</th>
           <th>Actions</th>
         </tr>
+      </thead>
+      <tbody>
         <% invoices.forEach((invoice) => { %>
           <tr>
             <td><%= invoice.invoiceNumber %></td>
             <td><%= invoice.buyer.name %></td>
             <td><%= new Date(invoice.date).toLocaleDateString('en-GB') %></td>
             <td>₹<%= invoice.totalAmount.toFixed(2) %></td>
-            <td>₹<%= (
-              invoice.totalAmount - shippingCharges - 20 // Include profit calculation
-            ).toFixed(2) %></td>
+            <td>₹<%= invoice.profit %></td>
             <td>
               <a href="/invoice/view/<%= invoice._id %>" class="btn btn-primary btn-sm">View</a>
             </td>

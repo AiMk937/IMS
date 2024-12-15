@@ -44,9 +44,9 @@
       </tbody>
     </table>
     <div style="margin-top: 20px; text-align: right;">
-      <h6>Subtotal: ₹<%= (invoice.totalAmount - invoice.shippingCharges).toFixed(2) %></h6>
-      <h6>Shipping Charges: ₹<%= invoice.shippingCharges.toFixed(2) %></h6>
-      <h4>Total: ₹<%= invoice.totalAmount.toFixed(2) %></h4>
+      <h6>Subtotal: ₹<span id="invoiceSubtotal">0.00</span></h6>
+      <h6>Shipping Charges: ₹<span id="invoiceShippingCharges">0.00</span></h6>
+      <h4>Total: ₹<span id="invoiceTotal">0.00</span></h4>
     </div>
     <hr>
     <div style="text-align: center; margin-top: 20px;">

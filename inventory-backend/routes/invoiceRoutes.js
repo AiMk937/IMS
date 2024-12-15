@@ -202,14 +202,50 @@ router.post('/generate', async (req, res) => {
 // Route: View all invoices
 router.get('/view', async (req, res) => {
   try {
+    // Fetch all invoices from the database
     const invoices = await Invoice.find().sort({ date: -1 }); // Sort by most recent
-    const invoicesWithDates = invoices.map((invoice) => ({
-      ...invoice._doc,
-      formattedDate: new Date(invoice.date).toLocaleDateString('en-GB'),
-    }));
-    res.render('inventory/invoices', { invoices: invoicesWithDates });
+
+    // Calculate profit for each invoice
+    const invoicesWithProfit = await Promise.all(
+      invoices.map(async (invoice) => {
+        const miscCharges = 20; // Fixed miscellaneous charges
+        const shippingCharges = invoice.shippingCharges || 0; // Default shippingCharges to 0
+        const packagingCost = invoice.packagingCost || 0; // Default packagingCost to 0
+
+        let totalProfit = 0;
+
+        // Calculate profit for each item in the invoice
+        for (const item of invoice.items) {
+          // Fetch the item from the database to get the Cost Price
+          const dbItem = await Item.findById(item.itemId);
+
+          if (dbItem) {
+            const sellingPrice = item.price; // Selling price in the invoice
+            const costPrice = dbItem.costPrice || 0; // Fetch cost price from database
+            const quantity = item.quantity;
+
+            const itemProfit = (sellingPrice - costPrice) * quantity; // Profit per item
+            totalProfit += itemProfit;
+          }
+        }
+
+        // Subtract miscellaneous charges, shipping charges, and packaging cost from total profit
+        totalProfit -= miscCharges + shippingCharges + packagingCost;
+
+        return {
+          ...invoice._doc,
+          formattedDate: new Date(invoice.date).toLocaleDateString('en-GB'),
+          shippingCharges: shippingCharges.toFixed(2),
+          packagingCost: packagingCost.toFixed(2),
+          profit: totalProfit.toFixed(2), // Attach calculated profit
+        };
+      })
+    );
+
+    // Pass invoices with calculated profit to the template
+    res.render('inventory/invoices', { invoices: invoicesWithProfit });
   } catch (err) {
-    console.error('Error fetching invoices:', err);
+    console.error('Error fetching invoices:', err.message);
     res.status(500).send('Internal Server Error');
   }
 });
