@@ -25,7 +25,7 @@ const upload = multer({
 router.get('/', async (req, res) => {
   try {
     const selectedCategory = req.query.category || ''; // Get selected category from query
-    const categories = ['Beauty Products', 'Clothing', 'Clutchers', 'Electronics', 'Hairbands', 'Headbands', 'Caps', 'Scrunchie', 'Toys', 'Other'].sort(); // Predefined categories
+    const categories = ['Beauty Products', 'Clips','Clothing', 'Clutchers', 'Electronics', 'Hairbands', 'Headbands', 'Caps', 'Scrunchie', 'Toys', 'Other'].sort(); // Predefined categories
 
     let query = {}; // Query object to filter items
 
