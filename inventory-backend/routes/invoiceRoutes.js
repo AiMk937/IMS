@@ -17,8 +17,11 @@ router.get('/', async (req, res) => {
         : null,
     }));
 
-    // Render the invoice generation page and pass the items with base64 image
-    res.render('inventory/invoice', { items: itemsWithImages });
+    // Add the current date for the invoice generation page
+    const formattedDate = new Date().toLocaleDateString('en-GB'); // Format as DD/MM/YYYY
+
+    // Render the invoice generation page and pass the items with base64 image and formatted date
+    res.render('inventory/invoice', { items: itemsWithImages, formattedDate });
   } catch (err) {
     console.error('Error loading invoice page:', err);
     res.status(500).send('Internal Server Error');
@@ -97,6 +100,9 @@ router.post('/generate', async (req, res) => {
 
     await newInvoice.save();
 
+    // Format the date for the invoice
+    const formattedDate = new Date(newInvoice.date).toLocaleDateString('en-GB'); // Format as DD/MM/YYYY
+
     // Generate HTML for the invoice
     const invoiceHtml = `
       <div style="text-align: center; margin-bottom: 20px;">
@@ -107,6 +113,7 @@ router.post('/generate', async (req, res) => {
       <hr>
       <div style="margin-bottom: 20px;">
         <h4>Invoice Number: ${nextInvoiceNumber}</h4>
+        <h6>Date: ${formattedDate}</h6> <!-- Add date -->
         <h4>Bill To:</h4>
         <p>
           Name: ${buyerDetails.name} <br>
@@ -164,15 +171,21 @@ router.get('/view', async (req, res) => {
     // Fetch all invoices from the database
     const invoices = await Invoice.find().sort({ date: -1 }); // Sort by most recent
 
+    // Format dates for each invoice
+    const invoicesWithDates = invoices.map((invoice) => ({
+      ...invoice._doc,
+      formattedDate: new Date(invoice.date).toLocaleDateString('en-GB'),
+    }));
+
     // Render the invoices page and pass the data
-    res.render('inventory/invoices', { invoices });
+    res.render('inventory/invoices', { invoices: invoicesWithDates });
   } catch (err) {
     console.error('Error fetching invoices:', err);
     res.status(500).send('Internal Server Error');
   }
 });
 
-// Route: View single invoice
+
 router.get('/view/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -182,8 +195,11 @@ router.get('/view/:id', async (req, res) => {
       return res.status(404).send('Invoice not found');
     }
 
-    // Render a page or return invoice data
-    res.render('inventory/invoiceDetails', { invoice });
+    // Format the date for display
+    const formattedDate = new Date(invoice.date).toLocaleDateString('en-GB');
+
+    // Render the invoice details page
+    res.render('inventory/invoiceDetails', { invoice, formattedDate });
   } catch (err) {
     console.error('Error fetching invoice:', err);
     res.status(500).send('Internal Server Error');
