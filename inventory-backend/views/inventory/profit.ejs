@@ -1,6 +1,7 @@
 <%- include('../layout/header', { title: 'Profit Dashboard' }) %>
 
 <div class="container my-5">
+  <!-- Page Header -->
   <header class="text-center mb-4">
     <h1 class="text-primary">Profit Dashboard</h1>
   </header>
@@ -16,14 +17,14 @@
       <p class="text-success">₹<%= totalProfit %></p>
     </div>
     <div class="col-md-3">
-      <h4>Total Expenses</h4>
-      <p class="text-danger">
-        ₹<%= (Number(totalPackagingCost || 0) + Number(totalShippingCharges || 0) + Number(totalMiscCharges || 0)).toFixed(2) %>
-      </p>
+      <h4>Total Cost Price</h4>
+      <p class="text-warning">₹<%= totalCostPrice %></p>
     </div>
     <div class="col-md-3">
-      <h4>Total Packaging Cost</h4>
-      <p class="text-info">₹<%= totalPackagingCost %></p>
+      <h4>Total Expenses</h4>
+      <p class="text-danger">
+        ₹<%= (Number(totalPackagingCost || 0) + Number(totalShippingCharges || 0) + Number(totalMiscCharges || 0) + Number(totalCostPrice || 0)).toFixed(2) %>
+      </p>
     </div>
   </div>
 
@@ -31,17 +32,25 @@
   <h4 class="text-center">Monthly Profits and Revenues</h4>
   <canvas id="monthlyChart" style="max-height: 400px;"></canvas>
 
-  <!-- Expense Breakdown -->
-  <h4 class="text-center mt-5">Expense Breakdown</h4>
-  <canvas id="expenseChart" style="max-height: 400px;"></canvas>
+  <!-- Charts Row -->
+  <div class="row mt-5">
+    <div class="col-md-6">
+      <h4 class="text-center">Expense Breakdown</h4>
+      <canvas id="expenseChart" style="max-height: 400px;"></canvas>
+    </div>
+    <div class="col-md-6">
+      <h4 class="text-center">Profit vs Expenses</h4>
+      <canvas id="profitExpenseChart" style="max-height: 400px;"></canvas>
+    </div>
+  </div>
 
-  <!-- Highest Selling Products -->
-  <h4 class="text-center mt-5">Top 5 Highest Selling Products</h4>
-  <ul class="list-group mb-5">
-    <% highestSellingProducts.forEach(([productName, quantity]) => { %>
+  <!-- Top 10 Highest Sold Products -->
+  <h4 class="text-center mt-5">Top 10 Highest Sold Products</h4>
+  <ul class="list-group">
+    <% topProducts.forEach(product => { %>
       <li class="list-group-item d-flex justify-content-between">
-        <span><strong><%= productName %></strong></span>
-        <span><%= quantity %> units sold</span>
+        <span><%= product.name %></span>
+        <span><strong><%= product.quantity %> units</strong></span>
       </li>
     <% }) %>
   </ul>
@@ -49,12 +58,13 @@
 
 <%- include('../layout/footer') %>
 
+<!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   // Monthly Bar Chart
-  const monthlyLabels = <%- JSON.stringify(monthlyLabels) %>;
-  const monthlyRevenue = <%- JSON.stringify(monthlyRevenue) %>;
-  const monthlyProfit = <%- JSON.stringify(monthlyProfit) %>;
+  const monthlyLabels = <%- JSON.stringify(monthlyLabels || []) %>;
+  const monthlyRevenue = <%- JSON.stringify(monthlyRevenue || []) %>;
+  const monthlyProfit = <%- JSON.stringify(monthlyProfit || []) %>;
 
   new Chart(document.getElementById('monthlyChart'), {
     type: 'bar',
@@ -72,17 +82,43 @@
   new Chart(document.getElementById('expenseChart'), {
     type: 'pie',
     data: {
-      labels: ['Packaging', 'Shipping', 'Miscellaneous'],
+      labels: ['Cost Price', 'Packaging', 'Shipping', 'Miscellaneous'],
       datasets: [
         {
           data: [
-            <%= totalPackagingCost %>,
-            <%= totalShippingCharges %>,
-            <%= totalMiscCharges %>
+            <%= totalCostPrice || 0 %>,
+            <%= totalPackagingCost || 0 %>,
+            <%= totalShippingCharges || 0 %>,
+            <%= totalMiscCharges || 0 %>
           ],
-          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
+          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FFA07A']
         }
       ],
     },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+
+  // Profit vs Expense Pie Chart
+  new Chart(document.getElementById('profitExpenseChart'), {
+    type: 'pie',
+    data: {
+      labels: ['Profit', 'Expenses'],
+      datasets: [
+        {
+          data: [
+            <%= totalProfit || 0 %>,
+            <%= (Number(totalPackagingCost) + Number(totalShippingCharges) + Number(totalMiscCharges) + Number(totalCostPrice)) %>
+          ],
+          backgroundColor: ['#4BC0C0', '#FF6384']
+        }
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } }
+    }
   });
 </script>

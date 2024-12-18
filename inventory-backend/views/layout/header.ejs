@@ -9,50 +9,96 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
   <link rel="stylesheet" href="/styles.css">
+  <style>
+    /* Custom styling for better appearance */
+    .offcanvas {
+      background-color: #343a40; /* Dark background */
+      color: #f8f9fa; /* Light text */
+    }
+    .offcanvas .nav-link {
+      color: #f8f9fa;
+      transition: color 0.3s ease;
+    }
+    .offcanvas .nav-link:hover {
+      color: #ffc107; /* Highlight link on hover */
+    }
+    .offcanvas-header {
+      border-bottom: 1px solid #495057;
+    }
+    .offcanvas-footer {
+      border-top: 1px solid #495057;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+  </style>
 </head>
 <body>
+  <!-- Header -->
   <header class="bg-dark text-white py-3">
-    <nav class="navbar navbar-expand-lg navbar-dark container">
-      <a class="navbar-brand" href="/">IMS</a>
+    <div class="container d-flex justify-content-between align-items-center">
+      <a class="navbar-brand text-white fw-bold" href="/">IMS</a>
       <button 
-        class="navbar-toggler" 
+        class="btn btn-outline-light" 
         type="button" 
-        data-bs-toggle="collapse" 
-        data-bs-target="#navbarNav" 
-        aria-controls="navbarNav" 
-        aria-expanded="false" 
-        aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
+        data-bs-toggle="offcanvas" 
+        data-bs-target="#offcanvasNavbar" 
+        aria-controls="offcanvasNavbar">
+        <i class="bi bi-list"></i> Menu
       </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-  <ul class="navbar-nav ms-auto">
-    <li class="nav-item">
-      <a class="nav-link" href="/items">Inventory List</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="/items/add">Add New Item</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="/invoice">Generate Invoice</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="/invoice/view">View Invoices</a>
-    </li>
-    <!-- Add Packaging Material link -->
-    <li class="nav-item">
-      <a class="nav-link" href="/packaging">Packaging Materials</a>
-    </li>
-    <!-- Add Add Packaging Material link -->
-    <li class="nav-item">
-      <a class="nav-link" href="/packaging/add-packaging">Add Packaging Material</a>
-    </li>
-    <!-- Add Add Packaging to Invoice link -->
-    <li class="nav-item">
-      <a class="nav-link" href="/packaging/add-packaging-to-invoice">Add Packaging to Invoice</a>
-    </li>
-  </ul>
-</div>
-
-    </nav>
+    </div>
   </header>
+
+  <!-- Off-Canvas Navbar (Right-Side) -->
+  <div class="offcanvas offcanvas-end bg-dark text-white" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Navigation</h5>
+      <button 
+        type="button" 
+        class="btn-close btn-close-white" 
+        data-bs-dismiss="offcanvas" 
+        aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="/items">Inventory List</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/items/add">Add New Item</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/invoice">Generate Invoice</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/invoice/view">View Invoices</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/packaging">Packaging Materials</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/packaging/add-packaging">Add Packaging Material</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/packaging/add-packaging-to-invoice">Add Packaging to Invoice</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/profit">Profit Analytics</a>
+        </li>
+      </ul>
+    </div>
+    <div class="offcanvas-footer">
+      <p>© 2024 AK GLOBAL</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
   <main class="container my-4">
+    <!-- Content will load here -->
+  </main>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
