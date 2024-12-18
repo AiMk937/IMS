@@ -265,8 +265,20 @@ router.get('/view/:id', async (req, res) => {
       return res.status(404).send('Invoice not found');
     }
 
+    // Calculate Subtotal
+    const subtotal = invoice.items.reduce((sum, item) => sum + item.total, 0);
+    const shippingCharges = invoice.shippingCharges || 0; // Default to 0 if not defined
+    const totalAmount = subtotal + shippingCharges;
+
     const formattedDate = new Date(invoice.date).toLocaleDateString('en-GB');
-    res.render('inventory/invoiceDetails', { invoice, formattedDate });
+
+    res.render('inventory/invoiceDetails', {
+      invoice,
+      formattedDate,
+      subtotal: subtotal.toFixed(2),
+      shippingCharges: shippingCharges.toFixed(2),
+      totalAmount: totalAmount.toFixed(2),
+    });
   } catch (err) {
     console.error('Error fetching invoice:', err);
     res.status(500).send('Internal Server Error');
