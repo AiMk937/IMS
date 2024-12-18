@@ -60,6 +60,10 @@ app.use('/packaging', packagingMaterialRoutes);
 const profitRoutes = require('./routes/profitRoutes');
 app.use('/', profitRoutes);
 
+// E-commerce Routes
+const ecommerceRoutes = require('./routes/ecommerceRoutes');
+app.use('/ecommerce', ecommerceRoutes);
+
 // -------------------------------
 // Handle Unknown Routes (404)
 // -------------------------------

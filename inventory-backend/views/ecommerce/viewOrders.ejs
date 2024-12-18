@@ -1,0 +1,69 @@
+<%- include('../layout/header', { title: 'View E-commerce Orders' }) %>
+
+<div class="container my-5">
+  <h1 class="text-center mb-4">E-commerce Orders</h1>
+
+  <!-- Filtering Form -->
+  <form method="GET" action="/ecommerce/view" class="row mb-4">
+    <div class="col-md-4">
+      <select name="platform" class="form-select" onchange="this.form.submit()">
+        <option value="All" <%= selectedPlatform === 'All' ? 'selected' : '' %>>All Platforms</option>
+        <option value="Amazon" <%= selectedPlatform === 'Amazon' ? 'selected' : '' %>>Amazon</option>
+        <option value="Flipkart" <%= selectedPlatform === 'Flipkart' ? 'selected' : '' %>>Flipkart</option>
+        <option value="Meesho" <%= selectedPlatform === 'Meesho' ? 'selected' : '' %>>Meesho</option>
+      </select>
+    </div>
+  </form>
+
+  <!-- Orders Table -->
+  <table class="table table-bordered table-hover">
+    <thead class="table-dark text-center">
+      <tr>
+        <th>Order Number</th>
+        <th>Platform</th>
+        <th>Product</th>
+        <th>Cost Price</th>
+        <th>Selling Price</th>
+        <th>Profit</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (orders.length > 0) { %>
+        <% orders.forEach(order => { %>
+          <% order.products.forEach(product => { %>
+            <tr>
+              <td class="text-center"><%= order.orderNumber %></td>
+              <td class="text-center"><%= order.platform %></td>
+              <td class="text-center"><%= product.productId.name %></td>
+              <td class="text-center">₹<%= product.productId.costPrice.toFixed(2) %></td>
+              <td class="text-center">₹<%= product.sellingPrice.toFixed(2) %></td>
+              <td class="text-center text-success fw-bold">
+                ₹<%= ((product.sellingPrice - product.productId.costPrice 
+                      - order.platformCharges 
+                      - order.GSTCharges 
+                      - order.shippingCharges) * product.quantity).toFixed(2) %>
+              </td>
+              <td class="text-center">
+                <a href="/ecommerce/edit/<%= order._id %>" class="btn btn-sm btn-warning" title="Edit Order">
+                  <i class="bi bi-pencil-square"></i> Edit
+                </a>
+                <form action="/ecommerce/delete/<%= order._id %>" method="POST" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-danger" title="Delete Order" onclick="return confirm('Are you sure?')">
+                    <i class="bi bi-trash"></i> Delete
+                  </button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        <% }) %>
+      <% } else { %>
+        <tr>
+          <td colspan="7" class="text-center">No orders found for the selected platform.</td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../layout/footer') %>

@@ -1,0 +1,135 @@
+<%- include('../layout/header', { title: 'Add E-commerce Order' }) %>
+
+<div class="container my-5">
+  <h1 class="text-center mb-4">Add E-commerce Order</h1>
+
+  <form action="/ecommerce/add-order" method="POST">
+    <!-- Order Number and Platform -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label for="orderNumber" class="form-label">Order Number</label>
+        <input type="text" class="form-control" name="orderNumber" required />
+      </div>
+      <div class="col-md-6">
+        <label for="platform" class="form-label">Platform</label>
+        <select class="form-select" name="platform" required>
+          <option value="Amazon">Amazon</option>
+          <option value="Flipkart">Flipkart</option>
+          <option value="Meesho">Meesho</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Charges -->
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <label for="platformCharges" class="form-label">Platform Charges</label>
+        <input type="number" class="form-control" name="platformCharges" step="0.01" required />
+      </div>
+      <div class="col-md-4">
+        <label for="GSTCharges" class="form-label">GST Charges</label>
+        <input type="number" class="form-control" name="GSTCharges" step="0.01" required />
+      </div>
+      <div class="col-md-4">
+        <label for="shippingCharges" class="form-label">Shipping Charges</label>
+        <input type="number" class="form-control" name="shippingCharges" step="0.01" required />
+      </div>
+    </div>
+
+    <!-- Products Sold -->
+    <h4 class="mb-3">Products Sold</h4>
+    <div id="products-list">
+      <div class="product-entry row mb-2">
+        <div class="col-md-4">
+          <label>Product</label>
+          <select class="form-select" name="products[0][productId]" required>
+            <% items.forEach(item => { %>
+            <option value="<%= item._id %>"><%= item.name %> (₹<%= item.sellingPrice %>)</option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label>Quantity</label>
+          <input type="number" class="form-control" name="products[0][quantity]" min="1" required />
+        </div>
+        <div class="col-md-4">
+          <label>Selling Price</label>
+          <input type="number" class="form-control" name="products[0][sellingPrice]" step="0.01" min="0" required />
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+          <button type="button" class="btn btn-danger remove-product">-</button>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="btn btn-success mb-3" id="add-product">Add Product</button>
+
+    <!-- Packaging Materials -->
+    <h4 class="mb-3">Packaging Materials Used</h4>
+    <div id="packaging-list">
+      <div class="packaging-entry row mb-2">
+        <div class="col-md-8">
+          <label>Packaging Material</label>
+          <select class="form-select" name="packagingMaterials[0][packagingId]" required>
+            <% packagingMaterials.forEach(material => { %>
+            <option value="<%= material._id %>"><%= material.name %> (₹<%= material.cost %>)</option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label>Quantity</label>
+          <input type="number" class="form-control" name="packagingMaterials[0][quantity]" min="1" required />
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+          <button type="button" class="btn btn-danger remove-packaging">-</button>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="btn btn-success mb-3" id="add-packaging">Add Packaging</button>
+
+    <!-- Submit Button -->
+    <div class="text-center mt-5">
+      <button type="submit" class="btn btn-primary px-5">Save Order</button>
+    </div>
+  </form>
+</div>
+
+<%- include('../layout/footer') %>
+
+<script>
+  // Add Product Row
+  let productCount = 1;
+  document.getElementById('add-product').addEventListener('click', () => {
+    const productList = document.getElementById('products-list');
+    const newProductEntry = `
+      <div class="product-entry row mb-2">
+        <div class="col-md-4">
+          <label>Product</label>
+          <select class="form-select" name="products[${productCount}][productId]" required>
+            <% items.forEach(item => { %>
+            <option value="<%= item._id %>"><%= item.name %> (₹<%= item.sellingPrice %>)</option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label>Quantity</label>
+          <input type="number" class="form-control" name="products[${productCount}][quantity]" min="1" required />
+        </div>
+        <div class="col-md-4">
+          <label>Selling Price</label>
+          <input type="number" class="form-control" name="products[${productCount}][sellingPrice]" step="0.01" min="0" required />
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+          <button type="button" class="btn btn-danger remove-product">-</button>
+        </div>
+      </div>`;
+    productList.insertAdjacentHTML('beforeend', newProductEntry);
+    productCount++;
+  });
+
+  // Remove Product Row
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-product')) {
+      e.target.closest('.product-entry').remove();
+    }
+  });
+</script>
