@@ -145,6 +145,7 @@ router.get('/edit/:id', async (req, res) => {
 });
 
 // POST: Update E-commerce Order
+// POST: Update E-commerce Order
 router.post('/edit/:id', async (req, res) => {
   try {
     const {
@@ -157,41 +158,55 @@ router.post('/edit/:id', async (req, res) => {
     } = req.body;
 
     let totalAmount = 0;
-    let totalProfit = 0;
+    let totalCost = 0; // To calculate profit
+    const updatedProducts = [];
 
     // Process updated products
-    const updatedProducts = [];
     for (const product of products) {
       const { productId, quantity, sellingPrice } = product;
 
-      totalAmount += Number(sellingPrice) * Number(quantity);
-      totalProfit += (Number(sellingPrice) - Number(product.costPrice)) * Number(quantity);
+      // Fetch item details for cost price
+      const item = await Item.findById(productId);
+      if (!item) throw new Error(`Product with ID ${productId} not found.`);
+
+      const quantitySold = Number(quantity) || 0;
+      const productSellingPrice = Number(sellingPrice) || 0;
+      const productCostPrice = Number(item.costPrice) || 0;
+
+      totalAmount += productSellingPrice * quantitySold; // Total Selling Price
+      totalCost += productCostPrice * quantitySold; // Total Cost Price
 
       updatedProducts.push({
         productId,
-        quantity: Number(quantity),
-        sellingPrice: Number(sellingPrice),
+        quantity: quantitySold,
+        sellingPrice: productSellingPrice,
       });
     }
 
-    const charges = Number(platformCharges) + Number(GSTCharges) + Number(shippingCharges);
-    totalProfit -= charges;
+    // Calculate charges
+    const platformChargesNum = Number(platformCharges) || 0;
+    const GSTChargesNum = Number(GSTCharges) || 0;
+    const shippingChargesNum = Number(shippingCharges) || 0;
 
+    // Calculate profit
+    const profit = totalAmount - totalCost - platformChargesNum - GSTChargesNum - shippingChargesNum;
+
+    // Update the order
     await EcommerceOrder.findByIdAndUpdate(req.params.id, {
       platform,
-      platformCharges: Number(platformCharges),
-      GSTCharges: Number(GSTCharges),
-      shippingCharges: Number(shippingCharges),
+      platformCharges: platformChargesNum,
+      GSTCharges: GSTChargesNum,
+      shippingCharges: shippingChargesNum,
       products: updatedProducts,
       packagingMaterials,
       totalAmount: totalAmount.toFixed(2),
-      profit: totalProfit.toFixed(2),
+      profit: profit.toFixed(2),
     });
 
     res.redirect('/ecommerce/view');
   } catch (err) {
-    console.error('❌ Error updating order:', err.message);
-    res.status(500).send('Internal Server Error');
+    console.error('❌ Error updating e-commerce order:', err.message);
+    res.status(500).send(`Error: ${err.message}`);
   }
 });
 
