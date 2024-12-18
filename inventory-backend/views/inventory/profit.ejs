@@ -2,51 +2,77 @@
 
 <div class="container my-5">
   <!-- Page Header -->
-  <header class="text-center mb-4">
-    <h1 class="text-primary">Profit Dashboard</h1>
+  <header class="text-center mb-5">
+    <h1 class="text-primary display-4">Profit Dashboard</h1>
   </header>
 
-  <!-- Profit and Revenue Summary -->
-  <div class="row text-center mb-5">
-    <div class="col-md-3">
-      <h4>Total Revenue</h4>
-      <p class="text-success">₹<%= totalRevenue %></p>
+  <!-- General Sales Section -->
+  <section class="mb-5">
+    <h2 class="text-center mb-4">General Sales</h2>
+    <!-- Summary -->
+    <div class="row text-center mb-4">
+      <div class="col-md-3"><h4>Total Revenue</h4><p class="fs-4 text-success">₹<%= totalRevenue || '0.00' %></p></div>
+      <div class="col-md-3"><h4>Total Profit</h4><p class="fs-4 text-success">₹<%= totalProfit || '0.00' %></p></div>
+      <div class="col-md-3"><h4>Total Cost Price</h4><p class="fs-4 text-warning">₹<%= totalCostPrice || '0.00' %></p></div>
+      <div class="col-md-3"><h4>Total Expenses</h4>
+        <p class="fs-4 text-danger">
+          ₹<%= (Number(totalPackagingCost || 0) + Number(totalShippingCharges || 0) + Number(totalMiscCharges || 0)).toFixed(2) %>
+        </p>
+      </div>
     </div>
-    <div class="col-md-3">
-      <h4>Total Profit</h4>
-      <p class="text-success">₹<%= totalProfit %></p>
-    </div>
-    <div class="col-md-3">
-      <h4>Total Cost Price</h4>
-      <p class="text-warning">₹<%= totalCostPrice %></p>
-    </div>
-    <div class="col-md-3">
-      <h4>Total Expenses</h4>
-      <p class="text-danger">
-        ₹<%= (Number(totalPackagingCost || 0) + Number(totalShippingCharges || 0) + Number(totalMiscCharges || 0) + Number(totalCostPrice || 0)).toFixed(2) %>
-      </p>
-    </div>
-  </div>
 
-  <!-- Monthly Profits and Revenues -->
-  <h4 class="text-center">Monthly Profits and Revenues</h4>
-  <canvas id="monthlyChart" style="max-height: 400px;"></canvas>
-
-  <!-- Charts Row -->
-  <div class="row mt-5">
-    <div class="col-md-6">
-      <h4 class="text-center">Expense Breakdown</h4>
-      <canvas id="expenseChart" style="max-height: 400px;"></canvas>
+    <!-- Charts -->
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <h4 class="text-center">Expense Breakdown</h4>
+        <canvas id="generalExpenseChart" style="height: 350px;"></canvas>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h4 class="text-center">Profit vs Expenses</h4>
+        <canvas id="generalProfitExpenseChart" style="height: 350px;"></canvas>
+      </div>
     </div>
-    <div class="col-md-6">
-      <h4 class="text-center">Profit vs Expenses</h4>
-      <canvas id="profitExpenseChart" style="max-height: 400px;"></canvas>
-    </div>
-  </div>
 
-  <!-- Top 10 Highest Sold Products -->
-<h4 class="text-center mt-5">Top 10 Highest Sold Products</h4>
-<ul class="list-group">
+    <!-- Monthly Profits -->
+    <h4 class="text-center mt-4">Monthly Profits and Revenues</h4>
+    <canvas id="generalMonthlyChart" style="height: 400px;"></canvas>
+  </section>
+
+  <!-- E-commerce Sales Section -->
+  <section>
+    <h2 class="text-center mb-4">E-commerce Sales</h2>
+    <!-- Summary -->
+    <div class="row text-center mb-4">
+      <div class="col-md-3"><h4>Total Revenue</h4><p class="fs-4 text-success">₹<%= ecommerceTotalRevenue || '0.00' %></p></div>
+      <div class="col-md-3"><h4>Total Profit</h4><p class="fs-4 text-success">₹<%= ecommerceTotalProfit || '0.00' %></p></div>
+      <div class="col-md-3"><h4>Total Cost Price</h4><p class="fs-4 text-warning">₹<%= ecommerceTotalCostPrice || '0.00' %></p></div>
+      <div class="col-md-3"><h4>Total Expenses</h4>
+        <p class="fs-4 text-danger">
+          ₹<%= (Number(ecommerceTotalPlatformCharges || 0) + Number(ecommerceTotalGST || 0) + Number(ecommerceTotalShippingCharges || 0) + Number(ecommerceTotalPackagingCharges || 0)).toFixed(2) %>
+        </p>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row">
+      <div class="col-md-6 mb-4">
+        <h4 class="text-center">Expense Breakdown</h4>
+        <canvas id="ecommerceExpenseChart" style="height: 350px;"></canvas>
+      </div>
+      <div class="col-md-6 mb-4">
+        <h4 class="text-center">Profit vs Expenses</h4>
+        <canvas id="ecommerceProfitExpenseChart" style="height: 350px;"></canvas>
+      </div>
+    </div>
+
+    <!-- Monthly Profits -->
+    <h4 class="text-center mt-4">Monthly Profits and Revenues</h4>
+    <canvas id="ecommerceMonthlyChart" style="height: 400px;"></canvas>
+  </section>
+</div>
+
+<h4 class="text-center  mt-5">Top 10 Highest Sold Products</h4>
+<ul class="list-group" style="margin-left: 10%; margin-right: 10%;">
   <% topProducts.forEach(([name, quantity]) => { %>
     <li class="list-group-item d-flex justify-content-between">
       <span><%= name %></span>
@@ -56,70 +82,77 @@
 </ul>
 </div>
 
+
 <%- include('../layout/footer') %>
 
 <!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  // Monthly Bar Chart
-  const monthlyLabels = <%- JSON.stringify(monthlyLabels || []) %>;
-  const monthlyRevenue = <%- JSON.stringify(monthlyRevenue || []) %>;
-  const monthlyProfit = <%- JSON.stringify(monthlyProfit || []) %>;
-
-  new Chart(document.getElementById('monthlyChart'), {
-    type: 'bar',
-    data: {
-      labels: monthlyLabels,
-      datasets: [
-        { label: 'Revenue', data: monthlyRevenue, backgroundColor: 'rgba(75, 192, 192, 0.6)' },
-        { label: 'Profit', data: monthlyProfit, backgroundColor: 'rgba(153, 102, 255, 0.6)' }
-      ],
-    },
-    options: { responsive: true, scales: { y: { beginAtZero: true } } }
-  });
-
-  // Expense Pie Chart
-  new Chart(document.getElementById('expenseChart'), {
+  // General Sales Charts
+  new Chart(document.getElementById('generalExpenseChart'), {
     type: 'pie',
     data: {
       labels: ['Cost Price', 'Packaging', 'Shipping', 'Miscellaneous'],
-      datasets: [
-        {
-          data: [
-            <%= totalCostPrice || 0 %>,
-            <%= totalPackagingCost || 0 %>,
-            <%= totalShippingCharges || 0 %>,
-            <%= totalMiscCharges || 0 %>
-          ],
-          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FFA07A']
-        }
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'bottom' } }
+      datasets: [{
+        data: <%- JSON.stringify([totalCostPrice || 0, totalPackagingCost || 0, totalShippingCharges || 0, totalMiscCharges || 0]) %>,
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FFA07A']
+      }]
     }
   });
 
-  // Profit vs Expense Pie Chart
-  new Chart(document.getElementById('profitExpenseChart'), {
+  new Chart(document.getElementById('generalProfitExpenseChart'), {
     type: 'pie',
     data: {
       labels: ['Profit', 'Expenses'],
+      datasets: [{
+        data: <%- JSON.stringify([totalProfit || 0, (totalCostPrice + totalPackagingCost + totalShippingCharges + totalMiscCharges) || 0]) %>,
+        backgroundColor: ['#4BC0C0', '#FF6384']
+      }]
+    }
+  });
+
+  new Chart(document.getElementById('generalMonthlyChart'), {
+    type: 'bar',
+    data: {
+      labels: <%- JSON.stringify(monthlyLabels || []) %>,
       datasets: [
-        {
-          data: [
-            <%= totalProfit || 0 %>,
-            <%= (Number(totalPackagingCost) + Number(totalShippingCharges) + Number(totalMiscCharges) + Number(totalCostPrice)) %>
-          ],
-          backgroundColor: ['#4BC0C0', '#FF6384']
-        }
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'bottom' } }
+        { label: 'Revenue', data: <%- JSON.stringify(monthlyRevenue || []) %>, backgroundColor: '#36A2EB' },
+        { label: 'Profit', data: <%- JSON.stringify(monthlyProfit || []) %>, backgroundColor: '#4BC0C0' }
+      ]
+    }
+  });
+
+  // E-commerce Charts
+  new Chart(document.getElementById('ecommerceExpenseChart'), {
+    type: 'pie',
+    data: {
+      labels: ['Cost Price', 'Platform Fee', 'GST', 'Shipping', 'Packaging'],
+      datasets: [{
+        data: <%- JSON.stringify([ecommerceTotalCostPrice || 0, ecommerceTotalPlatformCharges || 0, ecommerceTotalGST || 0, ecommerceTotalShippingCharges || 0, ecommerceTotalPackagingCharges || 0]) %>,
+        backgroundColor: ['#FF6384', '#FFCE56', '#36A2EB', '#FFA07A', '#4BC0C0']
+      }]
+    }
+  });
+
+  new Chart(document.getElementById('ecommerceProfitExpenseChart'), {
+    type: 'pie',
+    data: {
+      labels: ['Profit', 'Expenses'],
+      datasets: [{
+        data: <%- JSON.stringify([ecommerceTotalProfit || 0, (ecommerceTotalPlatformCharges + ecommerceTotalGST + ecommerceTotalShippingCharges + ecommerceTotalPackagingCharges) || 0]) %>,
+        backgroundColor: ['#4BC0C0', '#FF6384']
+      }]
+    }
+  });
+
+  new Chart(document.getElementById('ecommerceMonthlyChart'), {
+    type: 'bar',
+    data: {
+      labels: <%- JSON.stringify(ecommerceMonthlyLabels || []) %>,
+      datasets: [
+        { label: 'Revenue', data: <%- JSON.stringify(ecommerceMonthlyRevenue || []) %>, backgroundColor: '#FFCE56' },
+        { label: 'Profit', data: <%- JSON.stringify(ecommerceMonthlyProfit || []) %>, backgroundColor: '#FF6384' }
+      ]
     }
   });
 </script>
-

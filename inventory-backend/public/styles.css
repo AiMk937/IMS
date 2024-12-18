@@ -219,3 +219,8 @@ footer p:hover {
   font-size: 1.75rem; /* Increase font size of brand */
   font-weight: bold;
 }
+canvas {
+  max-width: 400px;  /* Set maximum width */
+  max-height: 400px; /* Set maximum height */
+  margin: 0 auto;    /* Center align the chart */
+}
