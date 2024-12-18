@@ -1,0 +1,88 @@
+<%- include('../layout/header', { title: 'Profit Dashboard' }) %>
+
+<div class="container my-5">
+  <header class="text-center mb-4">
+    <h1 class="text-primary">Profit Dashboard</h1>
+  </header>
+
+  <!-- Profit and Revenue Summary -->
+  <div class="row text-center mb-5">
+    <div class="col-md-3">
+      <h4>Total Revenue</h4>
+      <p class="text-success">₹<%= totalRevenue %></p>
+    </div>
+    <div class="col-md-3">
+      <h4>Total Profit</h4>
+      <p class="text-success">₹<%= totalProfit %></p>
+    </div>
+    <div class="col-md-3">
+      <h4>Total Expenses</h4>
+      <p class="text-danger">
+        ₹<%= (Number(totalPackagingCost || 0) + Number(totalShippingCharges || 0) + Number(totalMiscCharges || 0)).toFixed(2) %>
+      </p>
+    </div>
+    <div class="col-md-3">
+      <h4>Total Packaging Cost</h4>
+      <p class="text-info">₹<%= totalPackagingCost %></p>
+    </div>
+  </div>
+
+  <!-- Monthly Profits and Revenues -->
+  <h4 class="text-center">Monthly Profits and Revenues</h4>
+  <canvas id="monthlyChart" style="max-height: 400px;"></canvas>
+
+  <!-- Expense Breakdown -->
+  <h4 class="text-center mt-5">Expense Breakdown</h4>
+  <canvas id="expenseChart" style="max-height: 400px;"></canvas>
+
+  <!-- Highest Selling Products -->
+  <h4 class="text-center mt-5">Top 5 Highest Selling Products</h4>
+  <ul class="list-group mb-5">
+    <% highestSellingProducts.forEach(([productName, quantity]) => { %>
+      <li class="list-group-item d-flex justify-content-between">
+        <span><strong><%= productName %></strong></span>
+        <span><%= quantity %> units sold</span>
+      </li>
+    <% }) %>
+  </ul>
+</div>
+
+<%- include('../layout/footer') %>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Monthly Bar Chart
+  const monthlyLabels = <%- JSON.stringify(monthlyLabels) %>;
+  const monthlyRevenue = <%- JSON.stringify(monthlyRevenue) %>;
+  const monthlyProfit = <%- JSON.stringify(monthlyProfit) %>;
+
+  new Chart(document.getElementById('monthlyChart'), {
+    type: 'bar',
+    data: {
+      labels: monthlyLabels,
+      datasets: [
+        { label: 'Revenue', data: monthlyRevenue, backgroundColor: 'rgba(75, 192, 192, 0.6)' },
+        { label: 'Profit', data: monthlyProfit, backgroundColor: 'rgba(153, 102, 255, 0.6)' }
+      ],
+    },
+    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+  });
+
+  // Expense Pie Chart
+  new Chart(document.getElementById('expenseChart'), {
+    type: 'pie',
+    data: {
+      labels: ['Packaging', 'Shipping', 'Miscellaneous'],
+      datasets: [
+        {
+          data: [
+            <%= totalPackagingCost %>,
+            <%= totalShippingCharges %>,
+            <%= totalMiscCharges %>
+          ],
+          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
+        }
+      ],
+    },
+  });
+</script>

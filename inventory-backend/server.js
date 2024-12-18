@@ -51,6 +51,9 @@ app.get('/', (req, res) => {
   res.render('home'); // Render the home.ejs view
 });
 
+// Profit Page Route
+const profitRoutes = require('./routes/profitRoutes');
+app.use('/', profitRoutes); 
 
 // Handle unknown routes (404)
 app.use((req, res) => {
