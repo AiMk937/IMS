@@ -45,15 +45,15 @@
   </div>
 
   <!-- Top 10 Highest Sold Products -->
-  <h4 class="text-center mt-5">Top 10 Highest Sold Products</h4>
-  <ul class="list-group">
-    <% topProducts.forEach(product => { %>
-      <li class="list-group-item d-flex justify-content-between">
-        <span><%= product.name %></span>
-        <span><strong><%= product.quantity %> units</strong></span>
-      </li>
-    <% }) %>
-  </ul>
+<h4 class="text-center mt-5">Top 10 Highest Sold Products</h4>
+<ul class="list-group">
+  <% topProducts.forEach(([name, quantity]) => { %>
+    <li class="list-group-item d-flex justify-content-between">
+      <span><%= name %></span>
+      <span><strong><%= quantity %> units</strong></span>
+    </li>
+  <% }) %>
+</ul>
 </div>
 
 <%- include('../layout/footer') %>
@@ -122,3 +122,4 @@
     }
   });
 </script>
+

@@ -5,20 +5,23 @@ require('dotenv').config(); // Load environment variables from .env file
 
 const app = express();
 
-// Middleware to parse incoming form data
-app.use(express.urlencoded({ extended: true })); // Parses URL-encoded data from forms
-app.use(express.json()); // Parses JSON data from requests
+// -------------------------------
+// Middleware Setup
+// -------------------------------
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded form data
+app.use(express.json()); // Parse JSON data from requests
+app.use(express.static(path.join(__dirname, 'public'))); // Serve static files (CSS, JS, images)
 
-// Set EJS as the template engine
+// -------------------------------
+// Template Engine Setup
+// -------------------------------
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Serve static files (CSS, JS, etc.)
-app.use(express.static(path.join(__dirname, 'public')));
-
+// -------------------------------
 // MongoDB Connection
-const MONGO_URI =
-  process.env.MONGO_URI ||
+// -------------------------------
+const MONGO_URI = process.env.MONGO_URI || 
   'mongodb+srv://aimaanjkhaan:Arshee2597@cluster1.1ycsg.mongodb.net/?retryWrites=true&w=majority';
 
 mongoose
@@ -27,45 +30,53 @@ mongoose
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
   })
-  .then(() => console.log('MongoDB Connected'))
+  .then(() => console.log('✅ MongoDB Connected'))
   .catch((err) => {
-    console.error('MongoDB connection error:', err);
+    console.error('❌ MongoDB Connection Error:', err.message);
     process.exit(1); // Exit the process if connection fails
   });
 
-// Routes for handling inventory-related requests
+// -------------------------------
+// Routes
+// -------------------------------
+
+// Home Route
+const homeRoutes = require('./routes/homeRoutes');
+app.use('/', homeRoutes);
+
+// Item Management Routes
 const itemRoutes = require('./routes/itemRoutes');
 app.use('/items', itemRoutes);
 
-// Routes for invoice generation
+// Invoice Management Routes
 const invoiceRoutes = require('./routes/invoiceRoutes');
 app.use('/invoice', invoiceRoutes);
 
-// Routes for packaging material
-const packagingMaterialRoutes = require('./routes/PackagingMaterialRoutes'); // Add packaging material routes
-app.use('/packaging', packagingMaterialRoutes); // Add packaging routes
+// Packaging Material Routes
+const packagingMaterialRoutes = require('./routes/PackagingMaterialRoutes');
+app.use('/packaging', packagingMaterialRoutes);
 
-
-// Home Page Route
-app.get('/', (req, res) => {
-  res.render('home'); // Render the home.ejs view
-});
-
-// Profit Page Route
+// Profit Analysis Routes
 const profitRoutes = require('./routes/profitRoutes');
-app.use('/', profitRoutes); 
+app.use('/', profitRoutes);
 
-// Handle unknown routes (404)
+// -------------------------------
+// Handle Unknown Routes (404)
+// -------------------------------
 app.use((req, res) => {
   res.status(404).render('404', { title: 'Page Not Found' });
 });
 
-// Global error handling middleware
+// -------------------------------
+// Global Error Handler
+// -------------------------------
 app.use((err, req, res, next) => {
-  console.error('Global error handler:', err.stack);
+  console.error('❌ Global Error Handler:', err.stack);
   res.status(500).send('Internal Server Error');
 });
 
-// Start the server
+// -------------------------------
+// Start Server
+// -------------------------------
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
