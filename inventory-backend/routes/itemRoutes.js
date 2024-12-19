@@ -25,7 +25,7 @@ const upload = multer({
 router.get('/', async (req, res) => {
   try {
     const selectedCategory = req.query.category || ''; // Get selected category from query
-    const categories = ['Beauty Products', 'Clips','Clothing', 'Clutchers', 'Electronics', 'Hairbands', 'Headbands', 'Caps', 'Scrunchie', 'Toys', 'Other'].sort(); // Predefined categories
+    const categories = ['Beauty Products','Bracelet', 'Clips','Clothing', 'Clutchers', 'Electronics', 'Hairbands', 'Headbands', 'Caps', 'Scrunchie', 'Toys', 'Other'].sort(); // Predefined categories
 
     let query = {}; // Query object to filter items
 
@@ -55,7 +55,7 @@ router.get('/', async (req, res) => {
 // Route: Show add page for a new item
 router.get('/add', (req, res) => {
   // Predefined categories
-  const categories = ['Beauty Products','Clips', 'Clothing', 'Clutchers', 'Electronics', 'Hairbands', 'Headbands', 'Caps', 'Scrunchie', 'Toys', 'Other'].sort();
+  const categories = ['Beauty Products','Bracelet','Clips', 'Clothing', 'Clutchers', 'Electronics', 'Hairbands', 'Headbands', 'Caps', 'Scrunchie', 'Toys', 'Other'].sort();
   res.render('inventory/add', { item: {}, categories }); // Pass categories to the EJS view
 });
 
@@ -104,7 +104,7 @@ router.post('/add', upload.single('image'), async (req, res) => {
 // Route: Show edit page for an item
 router.get('/edit/:id', async (req, res) => {
   const { id } = req.params;
-  const categories = ['Beauty Products', 'Clips', 'Clothing', 'Clutchers', 'Electronics', 'Hairbands', 'Headbands', 'Caps', 'Scrunchie', 'Toys', 'Other'].sort(); // Predefined categories
+  const categories = ['Beauty Products','Bracelet', 'Clips', 'Clothing', 'Clutchers', 'Electronics', 'Hairbands', 'Headbands', 'Caps', 'Scrunchie', 'Toys', 'Other'].sort(); // Predefined categories
 
   console.log('Editing item with ID:', id); // Debugging log
 
