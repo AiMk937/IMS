@@ -6,6 +6,22 @@
     <h1 class="text-primary display-4">Profit Dashboard</h1>
   </header>
 
+  <!-- Filters Section -->
+  <section class="mb-5">
+    <h4 class="text-center">Filter by Date Range</h4>
+    <form class="d-flex justify-content-center mt-3">
+      <select name="dateRange" class="form-select w-auto mx-2">
+        <option value="today" <%= dateRange === 'today' ? 'selected' : '' %>>Today</option>
+        <option value="week" <%= dateRange === 'week' ? 'selected' : '' %>>This Week</option>
+        <option value="month" <%= dateRange === 'month' ? 'selected' : '' %>>This Month</option>
+        <option value="quarter" <%= dateRange === 'quarter' ? 'selected' : '' %>>This Quarter</option>
+        <option value="year" <%= dateRange === 'year' ? 'selected' : '' %>>This Year</option>
+        <option value="lifetime" <%= dateRange === 'lifetime' ? 'selected' : '' %>>Lifetime</option>
+      </select>
+      <button type="submit" class="btn btn-primary">Apply</button>
+    </form>
+  </section>
+
   <!-- General Sales Section -->
   <section class="mb-5">
     <h2 class="text-center mb-4">General Sales</h2>
@@ -69,19 +85,24 @@
     <h4 class="text-center mt-4">Monthly Profits and Revenues</h4>
     <canvas id="ecommerceMonthlyChart" style="height: 400px;"></canvas>
   </section>
-</div>
 
-<h4 class="text-center  mt-5">Top 10 Highest Sold Products</h4>
-<ul class="list-group" style="margin-left: 10%; margin-right: 10%;">
-  <% topProducts.forEach(([name, quantity]) => { %>
-    <li class="list-group-item d-flex justify-content-between">
-      <span><%= name %></span>
-      <span><strong><%= quantity %> units</strong></span>
-    </li>
-  <% }) %>
-</ul>
-</div>
+  <!-- Top Products -->
+  <h4 class="text-center mt-5">Top 10 Highest Sold Products</h4>
+  <ul class="list-group" style="margin-left: 10%; margin-right: 10%;">
+    <% topProducts.forEach(([name, quantity]) => { %>
+      <li class="list-group-item d-flex justify-content-between">
+        <span><%= name %></span>
+        <span><strong><%= quantity %> units</strong></span>
+      </li>
+    <% }) %>
+  </ul>
 
+  <!-- Export Buttons -->
+  <div class="text-center mt-5">
+    <a href="/profit/export/general" class="btn btn-outline-primary">Export General Sales to Excel</a>
+    <a href="/profit/export/ecommerce" class="btn btn-outline-primary">Export E-commerce Sales to Excel</a>
+  </div>
+</div>
 
 <%- include('../layout/footer') %>
 

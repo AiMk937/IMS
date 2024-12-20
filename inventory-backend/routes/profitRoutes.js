@@ -2,21 +2,60 @@ const express = require('express');
 const router = express.Router();
 const Invoice = require('../models/invoice');
 const EcommerceOrder = require('../models/e-commerce');
-const Item = require('../models/item'); // Import Item model
+const Item = require('../models/item');
+const excelJS = require('exceljs');
+
+// Helper function to filter data by date range
+const filterByDateRange = (data, dateRange) => {
+  const now = new Date();
+  return data.filter((entry) => {
+    const entryDate = new Date(entry.date);
+    switch (dateRange) {
+      case 'today':
+        return entryDate.toDateString() === now.toDateString();
+      case 'week':
+        const weekStart = new Date();
+        weekStart.setDate(now.getDate() - now.getDay());
+        return entryDate >= weekStart && entryDate <= now;
+      case 'month':
+        return entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear();
+      case 'quarter':
+        const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+        return entryDate >= quarterStart && entryDate <= now;
+      case 'year':
+        return entryDate.getFullYear() === now.getFullYear();
+      default:
+        return true; // No filtering for 'lifetime'
+    }
+  });
+};
 
 router.get('/profit', async (req, res) => {
   try {
-    const invoices = await Invoice.find();
-    const ecommerceOrders = await EcommerceOrder.find().populate('products.productId');
+    const { dateRange = 'lifetime' } = req.query;
 
-    let totalRevenue = 0, totalProfit = 0, totalCostPrice = 0;
-    let totalPackagingCost = 0, totalShippingCharges = 0, totalMiscCharges = 0;
+    const invoices = filterByDateRange(await Invoice.find(), dateRange);
+    const ecommerceOrders = filterByDateRange(await EcommerceOrder.find().populate('products.productId'), dateRange);
 
-    let ecommerceTotalRevenue = 0, ecommerceTotalProfit = 0, ecommerceTotalCostPrice = 0;
-    let ecommerceTotalGST = 0, ecommerceTotalPlatformCharges = 0, ecommerceTotalShippingCharges = 0, ecommerceTotalPackagingCharges = 0;
+    let totalRevenue = 0,
+      totalProfit = 0,
+      totalCostPrice = 0;
+    let totalPackagingCost = 0,
+      totalShippingCharges = 0,
+      totalMiscCharges = 0;
 
-    const monthlyData = {}, ecommerceMonthlyData = {};
-    const productSales = {}, ecommerceProductSales = {};
+    let ecommerceTotalRevenue = 0,
+      ecommerceTotalProfit = 0,
+      ecommerceTotalCostPrice = 0;
+    let ecommerceTotalGST = 0,
+      ecommerceTotalPlatformCharges = 0,
+      ecommerceTotalShippingCharges = 0,
+      ecommerceTotalPackagingCharges = 0;
+
+    const monthlyData = {},
+      ecommerceMonthlyData = {};
+    const productSales = {},
+      ecommerceProductSales = {};
 
     // General Sales Calculation
     for (const invoice of invoices) {
@@ -104,34 +143,32 @@ router.get('/profit', async (req, res) => {
     const topEcommerceProducts = Object.entries(ecommerceProductSales).sort((a, b) => b[1] - a[1]).slice(0, 10);
 
     // Render the page
-   res.render('inventory/profit', {
-  totalRevenue: totalRevenue || 0,
-  totalProfit: totalProfit || 0,
-  totalCostPrice: totalCostPrice || 0,
-  totalPackagingCost: totalPackagingCost || 0,
-  totalShippingCharges: totalShippingCharges || 0,
-  totalMiscCharges: totalMiscCharges || 0,
-  totalExpenses: (totalPackagingCost + totalShippingCharges + totalMiscCharges) || 0, // General Sales Expenses
-
-  ecommerceTotalRevenue: ecommerceTotalRevenue || 0,
-  ecommerceTotalProfit: ecommerceTotalProfit || 0,
-  ecommerceTotalCostPrice: ecommerceTotalCostPrice || 0,
-  ecommerceTotalPlatformCharges: ecommerceTotalPlatformCharges || 0,
-  ecommerceTotalGST: ecommerceTotalGST || 0,
-  ecommerceTotalShippingCharges: ecommerceTotalShippingCharges || 0,
-  ecommerceTotalPackagingCharges: ecommerceTotalPackagingCharges || 0,
-  ecommerceTotalExpenses: (ecommerceTotalPlatformCharges + ecommerceTotalGST + ecommerceTotalShippingCharges + ecommerceTotalPackagingCharges) || 0, // E-commerce Sales Expenses
-
-  monthlyLabels: monthlyLabels || [],
-  monthlyRevenue: monthlyRevenue || [],
-  monthlyProfit: monthlyProfit || [],
-  topProducts: topProducts || [],
-  ecommerceMonthlyLabels: ecommerceMonthlyLabels || [],
-  ecommerceMonthlyRevenue: ecommerceMonthlyRevenue || [],
-  ecommerceMonthlyProfit: ecommerceMonthlyProfit || [],
-  topEcommerceProducts: topEcommerceProducts || [],
-});
-
+    res.render('inventory/profit', {
+      dateRange,
+      totalRevenue,
+      totalProfit,
+      totalCostPrice,
+      totalPackagingCost,
+      totalShippingCharges,
+      totalMiscCharges,
+      totalExpenses: totalPackagingCost + totalShippingCharges + totalMiscCharges,
+      ecommerceTotalRevenue,
+      ecommerceTotalProfit,
+      ecommerceTotalCostPrice,
+      ecommerceTotalPlatformCharges,
+      ecommerceTotalGST,
+      ecommerceTotalShippingCharges,
+      ecommerceTotalPackagingCharges,
+      ecommerceTotalExpenses: ecommerceTotalPlatformCharges + ecommerceTotalGST + ecommerceTotalShippingCharges + ecommerceTotalPackagingCharges,
+      monthlyLabels,
+      monthlyRevenue,
+      monthlyProfit,
+      topProducts,
+      ecommerceMonthlyLabels,
+      ecommerceMonthlyRevenue,
+      ecommerceMonthlyProfit,
+      topEcommerceProducts,
+    });
   } catch (err) {
     console.error('Error generating profit page:', err.message);
     res.status(500).send('Internal Server Error');
