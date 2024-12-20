@@ -243,3 +243,62 @@ canvas {
   font-size: 0.85rem;
   z-index: 1000;
 }
+
+.quantity-group {
+  display: flex;
+  align-items: center; /* Align items vertically in the center */
+}
+
+.quantity-group input.item-quantity {
+  text-align: center;
+  width: 60px; /* Adjust width for better visibility */
+  height: 38px; /* Match button height */
+  border: 1px solid #ced4da;
+  border-left: none; /* Remove left border to merge with decrease button */
+  border-right: none; /* Remove right border to merge with increase button */
+  box-shadow: none;
+}
+
+.quantity-group button {
+  width: 38px; /* Square buttons for consistent size */
+  height: 38px; /* Match input height */
+  border: 1px solid #ced4da;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8f9fa; /* Light background */
+}
+
+.btn-quantity-decrease {
+  border-top-left-radius: 4px; /* Round top-left corner */
+  border-bottom-left-radius: 4px; /* Round bottom-left corner */
+}
+
+.btn-quantity-increase {
+  border-top-right-radius: 4px; /* Round top-right corner */
+  border-bottom-right-radius: 4px; /* Round bottom-right corner */
+}
+
+.quantity-group button:hover {
+  background-color: #e2e6ea; /* Slight hover effect */
+}
+
+/* Hide description column for screens smaller than 767px */
+@media (max-width: 767px) {
+  td:nth-child(4), th:nth-child(4) {
+    display: none; /* Hides the description column */
+  }
+
+  .table {
+    font-size: 14px; /* Reduce font size for better fit */
+  }
+
+  .quantity-group input.item-quantity {
+    width: 50px; /* Adjust width for smaller screens */
+  }
+
+  .quantity-group button {
+    width: 32px; /* Adjust button size */
+    height: 32px;
+  }
+}

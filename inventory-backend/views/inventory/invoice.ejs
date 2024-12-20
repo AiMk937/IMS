@@ -1,5 +1,44 @@
 <%- include('../layout/header', { title: 'Generate Invoice' }) %>
+<style>
+  .quantity-group {
+    display: flex;
+    align-items: center; /* Align items vertically in the center */
+  }
 
+  .quantity-group input.item-quantity {
+    text-align: center;
+    width: 60px; /* Adjust width for better visibility */
+    height: 38px; /* Match button height */
+    border: 1px solid #ced4da;
+    border-left: none; /* Remove left border to merge with decrease button */
+    border-right: none; /* Remove right border to merge with increase button */
+    box-shadow: none;
+  }
+
+  .quantity-group button {
+    width: 38px; /* Square buttons for consistent size */
+    height: 38px; /* Match input height */
+    border: 1px solid #ced4da;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f8f9fa; /* Light background */
+  }
+
+  .btn-quantity-decrease {
+    border-top-left-radius: 4px; /* Round top-left corner */
+    border-bottom-left-radius: 4px; /* Round bottom-left corner */
+  }
+
+  .btn-quantity-increase {
+    border-top-right-radius: 4px; /* Round top-right corner */
+    border-bottom-right-radius: 4px; /* Round bottom-right corner */
+  }
+
+  .quantity-group button:hover {
+    background-color: #e2e6ea; /* Slight hover effect */
+  }
+</style>
 <div class="container my-5">
   <header class="text-center mb-4">
     <h1 class="text-primary">Generate Invoice</h1>
@@ -35,18 +74,20 @@
             <th scope="col">Description</th>
             <th scope="col">Price</th>
             <th scope="col">Available Quantity</th>
-            <th scope="col">Quantity</th>
+            <th scope="col" style="width: 18vh;">Quantity</th>
           </tr>
         </thead>
         <tbody>
           <% items.forEach(item => { %>
           <tr>
             <td>
-              <input type="checkbox" name="selectedItems" value="<%= item._id %>">
+              <input type="checkbox" name="selectedItems" value="<%= item._id %>" class="select-item">
             </td>
             <td>
               <% if (item.imageBase64) { %>
-              <img src="<%= item.imageBase64 %>" alt="Item Image" class="img-thumbnail" style="width: 100px; height: 80px;">
+              <a href="#" data-bs-toggle="modal" data-bs-target="#imageModal<%= item._id %>">
+                <img src="<%= item.imageBase64 %>" alt="Item Image" class="img-thumbnail" style="width: 100px; height: 80px;">
+              </a>
               <% } else { %>
               <span class="text-muted">No Image</span>
               <% } %>
@@ -62,149 +103,104 @@
               <%= item.quantity || 0 %>
             </td>
             <td>
-              <input type="number" name="quantity-<%= item._id %>" class="form-control" placeholder="Enter quantity" min="1"
-                max="<%= item.quantity %>">
+              <div class="input-group quantity-group">
+                <button type="button" class="btn btn-outline-secondary btn-quantity-decrease" data-price="<%= item.sellingPrice %>" data-id="<%= item._id %>">-</button>
+                <input type="number" name="quantity-<%= item._id %>" style="width: 0.8em;" class="form-control item-quantity text-center" value="0" min="0" max="<%= item.quantity %>" disabled>
+                <button type="button" class="btn btn-outline-secondary btn-quantity-increase" data-price="<%= item.sellingPrice %>" data-id="<%= item._id %>">+</button>
+              </div>                            
             </td>
           </tr>
+
+          <!-- Image Modal -->
+          <div class="modal fade" id="imageModal<%= item._id %>" tabindex="-1" aria-labelledby="imageModalLabel<%= item._id %>" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="imageModalLabel<%= item._id %>"><%= item.name %> - Image</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                  <img src="<%= item.imageBase64 %>" alt="<%= item.name %>" class="img-fluid">
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- End of Image Modal -->
           <% }) %>
         </tbody>
       </table>
     </div>
 
-    <div class="text-center">
+    <!-- Display Total Below the Table -->
+    <div class="text-end">
+      <h5>Total Value: ₹<span id="totalValue">0.00</span></h5>
+    </div>
+
+    <div class="text-center mt-3">
       <button type="button" id="generateInvoice" class="btn btn-primary px-4 py-2">Generate Invoice</button>
     </div>
   </form>
 </div>
 
-<div id="invoicePreview" class="mt-5" style="display: none;">
-  <h3 class="text-center">Invoice</h3>
-  <div id="invoiceContent" style="padding: 20px; border: 1px solid #ddd; width: 80%; margin: auto;">
-    <div style="text-align: center; margin-bottom: 20px;">
-      <h2>AK GLOBAL</h2>
-      <p>Flat no. 5 New Light Building, Kalina, Mumbai. 400029</p>
-      <p>Contact: 1234567890 | Email: brand@example.com</p>
-    </div>
-    <hr>
-    <div style="margin-bottom: 20px;">
-      <h6>Date: <%= formattedDate %></h6>
-      <h4>Bill To:</h4>
-      <p id="buyerDetails"></p>
-    </div>
-    <table style="width: 100%; border-collapse: collapse;">
-      <thead>
-        <tr style="background-color: #f8f8f8;">
-          <th style="border: 1px solid #ddd; padding: 8px;">Name</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Description</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Quantity</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Price</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Subtotal</th>
-        </tr>
-      </thead>
-      <tbody id="invoiceItems"></tbody>
-    </table>
-    <div style="margin-top: 20px; text-align: right;">
-      <h5>Subtotal: ₹<span id="invoiceSubtotal">0.00</span></h5>
-      <h5>Shipping Charges: ₹<span id="invoiceShippingCharges">0.00</span></h5>
-      <h4>Total: ₹<span id="invoiceTotal">0.00</span></h4>
-    </div>    
-    <hr>
-    <div style="text-align: center; margin-top: 20px;">
-      <p>Thank you for your purchase!</p>
-      <p>If you have any questions, contact us at brand@example.com</p>
-    </div>
-  </div>
-  <button type="button" id="downloadInvoice" class="btn btn-success mt-3">Download Invoice</button>
-</div>
-
 <%- include('../layout/footer') %>
 
 <script>
-  document.getElementById('generateInvoice').addEventListener('click', async () => {
-  const buyerDetails = {
-    name: document.getElementById('buyerName').value,
-    address: document.getElementById('buyerAddress').value,
-    contactNumber: document.getElementById('buyerContact').value,
+  const updateTotal = () => {
+    let total = 0;
+    document.querySelectorAll('.item-quantity').forEach(input => {
+      if (parseInt(input.value) > 0) {
+        const price = parseFloat(input.closest('.quantity-group').querySelector('.btn-quantity-increase').getAttribute('data-price'));
+        const quantity = parseInt(input.value, 10);
+        if (!isNaN(price) && !isNaN(quantity)) {
+          total += price * quantity;
+        }
+      }
+    });
+    document.getElementById('totalValue').innerText = total.toFixed(2);
   };
 
-  if (!buyerDetails.name || !buyerDetails.address || !buyerDetails.contactNumber) {
-    alert('Please fill in all buyer details.');
-    return;
-  }
+  const handleQuantityChange = (button, increment) => {
+    const input = button.closest('.quantity-group').querySelector('.item-quantity');
+    const checkbox = button.closest('tr').querySelector('.select-item');
+    let quantity = parseInt(input.value) || 0;
+    const max = parseInt(input.getAttribute('max')) || Infinity;
 
-  const formData = new FormData(document.getElementById('invoiceForm'));
-  const selectedItems = formData.getAll('selectedItems');
-  if (selectedItems.length === 0) {
-    alert('Please select at least one item to generate the invoice.');
-    return;
-  }
+    // Update quantity
+    quantity += increment;
+    if (quantity < 0) quantity = 0;
+    if (quantity > max) quantity = max;
 
-  const shippingCharges = parseFloat(document.getElementById('shippingCharges').value) || 0;
+    input.value = quantity;
 
-  const invoiceData = [];
-  let total = 0;
+    // Auto-select checkbox if quantity > 0
+    checkbox.checked = quantity > 0;
 
-  selectedItems.forEach(itemId => {
-    const quantity = formData.get(`quantity-${itemId}`);
-    if (!quantity || quantity <= 0) {
-      alert('Please enter a valid quantity for selected items.');
-      return;
-    }
-    const price = parseFloat(document.querySelector(`[name="quantity-${itemId}"]`).closest('tr').querySelector('td:nth-child(5)').innerText.replace('₹', '')) || 0;
-    const subtotal = price * quantity;
-    total += subtotal;
+    // Update totals
+    updateTotal();
+  };
 
-    invoiceData.push({ itemId, quantity, price, subtotal });
+  // Attach event listeners
+  document.querySelectorAll('.btn-quantity-increase').forEach(button => {
+    button.addEventListener('click', () => handleQuantityChange(button, 1));
   });
 
-  // Add shipping charges to total
-  total += shippingCharges;
-
-  document.getElementById('invoiceSubtotal').innerText = (total - shippingCharges).toFixed(2);
-  document.getElementById('invoiceShippingCharges').innerText = shippingCharges.toFixed(2);
-  document.getElementById('invoiceTotal').innerText = total.toFixed(2);
-
-  const response = await fetch('/invoice/generate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ invoiceData, buyerDetails, shippingCharges, total }),
+  document.querySelectorAll('.btn-quantity-decrease').forEach(button => {
+    button.addEventListener('click', () => handleQuantityChange(button, -1));
   });
 
-  if (response.ok) {
-    const invoiceHtml = await response.text();
-    document.getElementById('invoicePreview').style.display = 'block';
-    document.getElementById('invoiceContent').innerHTML = invoiceHtml;
-  } else {
-    alert('Failed to generate invoice.');
-  }
-});
-
-
-  document.getElementById('downloadInvoice').addEventListener('click', () => {
-    printDiv('invoiceContent');
+  document.querySelectorAll('.select-item').forEach(checkbox => {
+    checkbox.addEventListener('change', (e) => {
+      const input = e.target.closest('tr').querySelector('.item-quantity');
+      if (e.target.checked) {
+        input.disabled = false;
+        if (parseInt(input.value) === 0) {
+          input.value = 1; // Default to 1 if selected
+        }
+      } else {
+        input.value = 0;
+        input.disabled = true;
+      }
+      updateTotal();
+    });
   });
-
-  function printDiv(divId) {
-    const printWindow = window.open('', '', 'width=800,height=600');
-    const divContents = document.getElementById(divId).innerHTML;
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Print Invoice</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
-          </style>
-        </head>
-        <body>
-          ${divContents}
-        </body>
-      </html>
-    `);
-
-    printWindow.document.close();
-    printWindow.print();
-  }
 </script>
