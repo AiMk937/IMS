@@ -6,6 +6,33 @@
     <a href="/invoice" class="btn btn-secondary mt-3">Back to Generate Invoice</a>
   </header>
 
+  <!-- Search and Filter -->
+  <form action="/invoice/view" method="GET" class="mb-4">
+    <div class="row">
+      <div class="col-md-3">
+        <input
+          type="text"
+          name="search"
+          class="form-control"
+          placeholder="Search by Buyer Name"
+          value="<%= search || '' %>"
+        />
+      </div>
+      <div class="col-md-3">
+        <input
+          type="date"
+          name="date"
+          class="form-control"
+          value="<%= date || '' %>"
+        />
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-primary">Filter</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Invoice Table -->
   <div class="table-responsive">
     <table class="table table-striped table-hover">
       <thead class="table-dark">
@@ -19,21 +46,40 @@
         </tr>
       </thead>
       <tbody>
-        <% invoices.forEach((invoice) => { %>
+        <% if (invoices.length === 0) { %>
           <tr>
-            <td><%= invoice.invoiceNumber %></td>
-            <td><%= invoice.buyer.name %></td>
-            <td><%= new Date(invoice.date).toLocaleDateString('en-GB') %></td>
-            <td>₹<%= invoice.totalAmount.toFixed(2) %></td>
-            <td>₹<%= invoice.profit %></td>
-            <td>
-              <a href="/invoice/view/<%= invoice._id %>" class="btn btn-primary btn-sm">View</a>
-            </td>
+            <td colspan="6" class="text-center">No invoices found</td>
           </tr>
-        <% }); %>        
+        <% } else { %>
+          <% invoices.forEach((invoice) => { %>
+            <tr>
+              <td><%= invoice.invoiceNumber %></td>
+              <td><%= invoice.buyer.name %></td>
+              <td><%= invoice.formattedDate %></td>
+              <td>₹<%= invoice.totalAmount.toFixed(2) %></td>
+              <td>₹<%= invoice.profit %></td>
+              <td>
+                <a href="/invoice/view/<%= invoice._id %>" class="btn btn-primary btn-sm">View</a>
+                <a href="/invoice/edit/<%= invoice._id %>" class="btn btn-warning btn-sm">Edit</a>
+                <a href="/invoice/delete/<%= invoice._id %>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this invoice?');">Delete</a>
+              </td>
+            </tr>
+          <% }); %>
+        <% } %>
       </tbody>
     </table>
   </div>
+
+  <!-- Pagination -->
+  <nav>
+    <ul class="pagination justify-content-center">
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+          <a class="page-link" href="/invoice/view?page=<%= i %>"><%= i %></a>
+        </li>
+      <% } %>
+    </ul>
+  </nav>
 </div>
 
 <%- include('../layout/footer') %>

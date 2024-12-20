@@ -66,8 +66,8 @@ router.post('/generate', async (req, res) => {
       return res.status(404).json({ error: 'None of the requested items are available in the inventory.' });
     }
 
-    // Prepare the invoice items and calculate total
-    let totalAmount = 0;
+    // Prepare the invoice items and calculate subtotal
+    let subtotal = 0;
     const invoiceItems = [];
 
     for (const item of items) {
@@ -84,7 +84,7 @@ router.post('/generate', async (req, res) => {
       }
 
       const total = quantity * item.sellingPrice;
-      totalAmount += total;
+      subtotal += total;
 
       // Add to invoice items
       invoiceItems.push({
@@ -106,8 +106,8 @@ router.post('/generate', async (req, res) => {
       }
     }
 
-    // Add shipping charges to total
-    totalAmount += parsedShippingCharges;
+    // Calculate total amount
+    const totalAmount = subtotal + parsedShippingCharges;
 
     // Fetch the last invoice number and increment
     const lastInvoice = await Invoice.findOne().sort({ _id: -1 }).select('invoiceNumber');
@@ -175,7 +175,7 @@ router.post('/generate', async (req, res) => {
         <tfoot>
           <tr>
             <td colspan="4" style="text-align: right;"><strong>Subtotal:</strong></td>
-            <td>₹${(totalAmount - parsedShippingCharges).toFixed(2)}</td>
+            <td>₹${subtotal.toFixed(2)}</td>
           </tr>
           <tr>
             <td colspan="4" style="text-align: right;"><strong>Shipping Charges:</strong></td>
@@ -188,6 +188,8 @@ router.post('/generate', async (req, res) => {
         </tfoot>
       </table>
       <hr>
+      <p><strong>Customer Declaration:</strong> I confirm that the products purchased are for personal use only and not for resale.</p>
+      <hr>
       <p>Thank you for your purchase!</p>
     `;
 
@@ -199,11 +201,37 @@ router.post('/generate', async (req, res) => {
   }
 });
 
+// Remaining routes (view, edit, delete, etc.) stay the same
+// with discount-related functionality removed in the `edit` route.
+
+module.exports = router;
+
 // Route: View all invoices
 router.get('/view', async (req, res) => {
   try {
-    // Fetch all invoices from the database
-    const invoices = await Invoice.find().sort({ date: -1 }); // Sort by most recent
+    const { search = '', date = '', page = 1 } = req.query; // Get query parameters
+    const perPage = 10; // Define items per page
+
+    // Build filter object
+    let filter = {};
+    if (search) {
+      filter['buyer.name'] = { $regex: search, $options: 'i' }; // Case-insensitive search
+    }
+    if (date) {
+      const dateStart = new Date(date);
+      const dateEnd = new Date(date);
+      dateEnd.setDate(dateEnd.getDate() + 1); // Include the full day
+      filter.date = { $gte: dateStart, $lt: dateEnd };
+    }
+
+    // Fetch filtered and paginated invoices
+    const invoices = await Invoice.find(filter)
+      .sort({ date: -1 }) // Sort by most recent
+      .skip((page - 1) * perPage) // Pagination offset
+      .limit(perPage); // Pagination limit
+
+    const totalCount = await Invoice.countDocuments(filter); // Total number of filtered invoices
+    const totalPages = Math.ceil(totalCount / perPage);
 
     // Calculate profit for each invoice
     const invoicesWithProfit = await Promise.all(
@@ -216,9 +244,7 @@ router.get('/view', async (req, res) => {
 
         // Calculate profit for each item in the invoice
         for (const item of invoice.items) {
-          // Fetch the item from the database to get the Cost Price
           const dbItem = await Item.findById(item.itemId);
-
           if (dbItem) {
             const sellingPrice = item.price; // Selling price in the invoice
             const costPrice = dbItem.costPrice || 0; // Fetch cost price from database
@@ -242,8 +268,14 @@ router.get('/view', async (req, res) => {
       })
     );
 
-    // Pass invoices with calculated profit to the template
-    res.render('inventory/invoices', { invoices: invoicesWithProfit });
+    // Pass data to the view
+    res.render('inventory/invoices', {
+      invoices: invoicesWithProfit,
+      search,
+      date,
+      currentPage: Number(page),
+      totalPages,
+    });
   } catch (err) {
     console.error('Error fetching invoices:', err.message);
     res.status(500).send('Internal Server Error');
@@ -281,6 +313,118 @@ router.get('/view/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching invoice:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Route: Edit an invoice
+router.get('/edit/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send('Invalid invoice ID.');
+    }
+
+    const invoice = await Invoice.findById(id).populate('items.itemId');
+
+    if (!invoice) {
+      return res.status(404).send('Invoice not found');
+    }
+
+    const items = await Item.find(); // Fetch all items for dropdown in edit form
+
+    res.render('inventory/editInvoice', { invoice, items });
+  } catch (err) {
+    console.error('Error fetching invoice for edit:', err.message);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+router.post('/edit/:id', async (req, res) => {
+  const { id } = req.params;
+  const { buyerDetails, invoiceData, shippingCharges } = req.body;
+
+  try {
+    const invoice = await Invoice.findById(id);
+
+    if (!invoice) {
+      return res.status(404).send('Invoice not found');
+    }
+
+    // Revert stock for old invoice items
+    for (const item of invoice.items) {
+      await Item.findByIdAndUpdate(item.itemId, {
+        $inc: { quantity: item.quantity },
+      });
+    }
+
+    // Prepare new invoice items and update stock
+    let totalAmount = 0;
+    const updatedItems = [];
+
+    for (const data of invoiceData) {
+      const item = await Item.findById(data.itemId);
+
+      if (!item || item.quantity < data.quantity) {
+        throw new Error(`Not enough stock for item ${item.name}`);
+      }
+
+      item.quantity -= data.quantity;
+      await item.save();
+
+      const total = item.sellingPrice * data.quantity;
+      totalAmount += total;
+
+      updatedItems.push({
+        itemId: item._id,
+        name: item.name,
+        quantity: data.quantity,
+        price: item.sellingPrice,
+        total,
+      });
+    }
+
+    totalAmount += parseFloat(shippingCharges);
+
+    // Update invoice details
+    invoice.buyer = buyerDetails;
+    invoice.items = updatedItems;
+    invoice.shippingCharges = parseFloat(shippingCharges);
+    invoice.totalAmount = totalAmount;
+
+    await invoice.save();
+
+    res.redirect('/invoice/view');
+  } catch (err) {
+    console.error('Error editing invoice:', err.message);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Route: Delete an invoice
+router.get('/delete/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const invoice = await Invoice.findById(id);
+
+    if (!invoice) {
+      return res.status(404).send('Invoice not found');
+    }
+
+    // Revert stock for deleted invoice items
+    for (const item of invoice.items) {
+      await Item.findByIdAndUpdate(item.itemId, {
+        $inc: { quantity: item.quantity },
+      });
+    }
+
+    await Invoice.findByIdAndDelete(id);
+
+    res.redirect('/invoice/view');
+  } catch (err) {
+    console.error('Error deleting invoice:', err.message);
     res.status(500).send('Internal Server Error');
   }
 });

@@ -6,18 +6,48 @@
     <a href="/items/add" class="btn btn-success">Add New Item</a>
   </header>
 
-  <form action="/items" method="GET">
-    <div class="col-md-6">
-      <label for="category" class="form-label">Filter by Category:</label>
-      <select name="category" class="form-control" onchange="this.form.submit()">
-        <option value="">Select Category</option>
-        <% categories.forEach(category => { %>
-          <option value="<%= category %>" <%= selectedCategory === category ? 'selected' : '' %>><%= category %></option>
-        <% }) %>
-      </select>
-    </div>
-  </form>
-<br>
+  <!-- Filter and Search Bar -->
+  <div class="card shadow p-4 mb-4">
+    <form action="/items" method="GET" class="row g-3 align-items-end">
+      <div class="col-md-6">
+        <label for="category" class="form-label fw-bold text-secondary">Filter by Category:</label>
+        <select
+          name="category"
+          id="category"
+          class="form-select"
+          onchange="this.form.submit()"
+        >
+          <option value="">Select Category</option>
+          <% categories.forEach(category => { %>
+          <option
+            value="<%= category %>"
+            <%= selectedCategory === category ? 'selected' : '' %>
+          >
+            <%= category %>
+          </option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="search" class="form-label fw-bold text-secondary">Search:</label>
+        <div class="input-group">
+          <input
+            type="text"
+            name="search"
+            id="search"
+            class="form-control"
+            placeholder="Search by name or description..."
+            value="<%= search || '' %>"
+          />
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i> Search
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Inventory Table -->
   <main>
     <% if (items.length > 0) { %>
       <div class="table-responsive">
@@ -35,12 +65,12 @@
           </thead>
           <tbody>
             <% items.forEach(item => { %>
-              <tr>
+              <tr class="<%= item.quantity < 5 ? 'table-danger' : '' %>">
                 <td>
                   <% if (item.imageBase64) { %>
-                  <img src="<%= item.imageBase64 %>" alt="Item Image" class="img-thumbnail" style="width: 100px; height: 75px;">
+                    <img src="<%= item.imageBase64 %>" alt="Item Image" class="img-thumbnail" style="width: 100px; height: 75px;">
                   <% } else { %>
-                  <span class="text-muted">No Image</span>
+                    <img src="/path/to/placeholder.png" alt="No Image" class="img-thumbnail" style="width: 100px; height: 75px;">
                   <% } %>
                 </td>
                 <td><%= item.name || "N/A" %></td>
@@ -49,14 +79,57 @@
                 <td>₹<%= item.sellingPrice ? item.sellingPrice.toFixed(2) : "0.00" %></td>
                 <td><%= item.quantity || 0 %></td>
                 <td>
-                  <a href="/items/edit/<%= item._id %>" class="btn btn-warning btn-sm">Edit</a>
-                  <a href="/items/delete/<%= item._id %>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this item?')">Delete</a>
-                </td>
+                  <div class="btn-group" role="group" aria-label="Actions">
+                    <a
+                      href="/items/edit/<%= item._id %>"
+                      class="btn btn-sm btn-warning"
+                      data-bs-toggle="tooltip"
+                      title="Edit Item"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a
+                      href="/items/delete/<%= item._id %>"
+                      class="btn btn-sm btn-danger"
+                      data-bs-toggle="tooltip"
+                      title="Delete Item"
+                      onclick="return confirm('Are you sure you want to delete this item?')"
+                    >
+                      <i class="fas fa-trash-alt"></i>
+                    </a>
+                  </div>
+                </td>                
               </tr>
             <% }) %>
           </tbody>
         </table>
       </div>
+      <!-- Pagination -->
+      <nav class="d-flex justify-content-center mt-4">
+        <ul class="pagination">
+          <% if (currentPage > 1) { %>
+            <li class="page-item">
+              <a class="page-link" href="?page=<%= currentPage - 1 %>&category=<%= selectedCategory || '' %>&search=<%= search || '' %>">
+                Previous
+              </a>
+            </li>
+          <% } %>
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+              <a class="page-link" href="?page=<%= i %>&category=<%= selectedCategory || '' %>&search=<%= search || '' %>">
+                <%= i %>
+              </a>
+            </li>
+          <% } %>
+          <% if (currentPage < totalPages) { %>
+            <li class="page-item">
+              <a class="page-link" href="?page=<%= currentPage + 1 %>&category=<%= selectedCategory || '' %>&search=<%= search || '' %>">
+                Next
+              </a>
+            </li>
+          <% } %>
+        </ul>
+      </nav>      
     <% } else { %>
       <p class="text-center text-muted">No items found in inventory. <a href="/items/add" class="text-primary">Add a new item</a>.</p>
     <% } %>
