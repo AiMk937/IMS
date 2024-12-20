@@ -16,7 +16,7 @@
     <!-- Material Category -->
     <div class="col-md-6">
       <label for="category" class="form-label">Category:</label>
-      <select id="category" name="category" class="form-control" required>
+      <select id="category" name="category" class="form-control" required onchange="toggleDimensions(this.value)">
         <option value="box" <%= material.category === 'box' ? 'selected' : '' %>>Box</option>
         <option value="shipping box" <%= material.category === 'shipping box' ? 'selected' : '' %>>Shipping Box</option>
         <option value="shipping bag" <%= material.category === 'shipping bag' ? 'selected' : '' %>>Shipping Bag</option>
@@ -42,6 +42,25 @@
       <input type="number" id="reorderLevel" name="reorderLevel" value="<%= material.reorderLevel %>" class="form-control" required>
     </div>
 
+    <!-- Dimensions (Length, Width, Height) -->
+    <div id="dimensionsSection" class="col-12" style="<%= material.category === 'shipping box' ? '' : 'display: none;' %>">
+      <h5 class="text-secondary">Dimensions (Applicable for Shipping Boxes)</h5>
+      <div class="row">
+        <div class="col-md-4">
+          <label for="length" class="form-label">Length (cm):</label>
+          <input type="number" id="length" name="dimensions[length]" value="<%= material.dimensions?.length || '' %>" class="form-control" step="0.01">
+        </div>
+        <div class="col-md-4">
+          <label for="width" class="form-label">Width (cm):</label>
+          <input type="number" id="width" name="dimensions[width]" value="<%= material.dimensions?.width || '' %>" class="form-control" step="0.01">
+        </div>
+        <div class="col-md-4">
+          <label for="height" class="form-label">Height (cm):</label>
+          <input type="number" id="height" name="dimensions[height]" value="<%= material.dimensions?.height || '' %>" class="form-control" step="0.01">
+        </div>
+      </div>
+    </div>
+
     <!-- Submit Button -->
     <div class="col-12 text-center">
       <button type="submit" class="btn btn-primary px-4 py-2">Update Material</button>
@@ -50,3 +69,14 @@
 </div>
 
 <%- include('../layout/footer') %>
+
+<script>
+  function toggleDimensions(category) {
+    const dimensionsSection = document.getElementById('dimensionsSection');
+    if (category === 'shipping box') {
+      dimensionsSection.style.display = 'block';
+    } else {
+      dimensionsSection.style.display = 'none';
+    }
+  }
+</script>

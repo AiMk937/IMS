@@ -224,3 +224,22 @@ canvas {
   max-height: 400px; /* Set maximum height */
   margin: 0 auto;    /* Center align the chart */
 }
+.text-muted[title] {
+  position: relative;
+  cursor: help;
+}
+
+.text-muted[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  z-index: 1000;
+}
