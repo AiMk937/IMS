@@ -301,7 +301,7 @@ router.get('/export/ecommerce', async (req, res) => {
 
     // Define Columns
     worksheet.columns = [
-      { header: 'Order ID', key: 'orderId', width: 30 },
+      { header: 'Order Number', key: 'orderNumber', width: 30 },
       { header: 'Date', key: 'date', width: 20 },
       { header: 'Shipping Charges', key: 'shippingCharges', width: 20 },
       { header: 'Packaging Charges', key: 'packagingCharges', width: 20 },
@@ -339,7 +339,7 @@ router.get('/export/ecommerce', async (req, res) => {
         (order.packagingCharges || 0);
 
       worksheet.addRow({
-        orderId: order._id,
+        orderNumber: order.orderNumber || 'N/A', // Updated field
         date: order.date.toISOString().split('T')[0],
         shippingCharges: order.shippingCharges || 0,
         packagingCharges: order.packagingCharges || 0,

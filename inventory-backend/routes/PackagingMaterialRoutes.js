@@ -86,14 +86,42 @@ router.get('/', async (req, res) => {
 // Route: Show the form to add packaging to an invoice
 router.get('/add-packaging-to-invoice', async (req, res) => {
   try {
-    // Fetch all invoices and packaging materials
-    const invoices = await Invoice.find();
-    const packagingMaterials = await PackagingMaterial.find();
+    // Fetch all invoices with attached packaging details
+    const invoices = await Invoice.find({ packagingDetails: { $exists: true, $not: { $size: 0 } } });
 
-    // Fetch invoices with attached packaging details
-    const invoicesWithPackaging = await Invoice.find({ packagingDetails: { $exists: true, $not: { $size: 0 } } });
+    const consolidatedData = invoices.map(invoice => {
+      let totalCost = 0;
+      let shippingPackagingCount = 0;
+      let internalPackagingCount = 0;
 
-    res.render('inventory/addPackaging', { invoices, packagingMaterials, invoicesWithPackaging });
+      invoice.packagingDetails.forEach(detail => {
+        totalCost += detail.cost;
+
+        // Categorize packaging based on category
+        if (detail.category === 'shipping box' || detail.category === 'shipping bag') {
+          shippingPackagingCount += detail.quantityUsed;
+        } else if (detail.category === 'box' || detail.category === 'plastic') {
+          internalPackagingCount += detail.quantityUsed;
+        }
+      });
+
+      return {
+        invoiceNumber: invoice.invoiceNumber,
+        buyerName: invoice.buyer?.name || 'N/A',
+        totalCost: totalCost.toFixed(2),
+        shippingPackagingCount,
+        internalPackagingCount,
+        id: invoice._id,
+      };
+    });
+
+    const packagingMaterials = await PackagingMaterial.find(); // Fetch all packaging materials
+
+    res.render('inventory/addPackaging', {
+      invoices,
+      consolidatedData,
+      packagingMaterials,
+    });
   } catch (err) {
     console.error('Error fetching invoices or packaging materials:', err);
     res.status(500).send('Internal Server Error');
@@ -150,34 +178,46 @@ router.get('/delete/:id', async (req, res) => {
   }
 });
 
-
-// Route: Submit packaging details for an invoice
-router.post('/add-packaging-to-invoice', async (req, res) => {
-  const { invoiceId, packagingMaterials } = req.body;
-
+router.get('/view/:id', async (req, res) => {
   try {
-    console.log('Received Form Data:', req.body);
-
-    // Find the invoice
-    const invoice = await Invoice.findById(invoiceId);
+    const invoice = await Invoice.findById(req.params.id);
     if (!invoice) {
       return res.status(404).send('Invoice not found');
+    }
+    res.render('inventory/viewPackaging', { invoice });
+  } catch (err) {
+    console.error('Error fetching invoice for view:', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
+
+router.post('/add-packaging-to-invoice', async (req, res) => {
+  const { invoiceNumber, packagingMaterials } = req.body;
+
+  try {
+    console.log('Received invoiceNumber:', invoiceNumber);
+
+    // Find the invoice by invoiceNumber
+    const invoice = await Invoice.findOne({ invoiceNumber });
+    if (!invoice) {
+      console.error('Invoice not found for Invoice Number:', invoiceNumber);
+      return res.status(404).send('Invoice not found. Please select a valid invoice.');
     }
 
     const packagingDetails = [];
     let totalPackagingCost = 0;
 
-    // Check and process packagingMaterials
+    // Process packagingMaterials
     if (packagingMaterials) {
       for (let materialId in packagingMaterials) {
         const materialData = packagingMaterials[materialId];
-
         if (materialData.selected === 'true' && materialData.quantityUsed) {
           const quantityUsed = parseInt(materialData.quantityUsed, 10);
           const material = await PackagingMaterial.findById(materialId);
 
           if (material && quantityUsed > 0) {
-            // Ensure enough stock is available
             if (material.quantity < quantityUsed) {
               return res.status(400).send(`Not enough stock for ${material.name}`);
             }
@@ -200,26 +240,15 @@ router.post('/add-packaging-to-invoice', async (req, res) => {
       }
     }
 
-    // Update the invoice with packaging details and cost
+    // Update the invoice
     invoice.packagingDetails = packagingDetails;
     invoice.packagingCost = totalPackagingCost;
 
     await invoice.save();
     console.log('Updated Invoice with Packaging Details:', invoice);
 
-    // Re-fetch updated data
-    const invoices = await Invoice.find();
-    const packagingMaterialsList = await PackagingMaterial.find();
-    const invoicesWithPackaging = await Invoice.find({
-      "packagingDetails.0": { $exists: true },
-    });
-
-    // Render the same page with updated data
-    res.render('inventory/addPackaging', {
-      invoices,
-      packagingMaterials: packagingMaterialsList,
-      invoicesWithPackaging,
-    });
+    // Redirect to the packaging view
+    res.redirect('/packaging/add-packaging-to-invoice');
   } catch (err) {
     console.error('Error adding packaging to invoice:', err);
     res.status(500).send('Internal Server Error');
