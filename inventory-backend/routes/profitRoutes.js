@@ -59,32 +59,43 @@ router.get('/profit', async (req, res) => {
 
     // General Sales Calculation
     for (const invoice of invoices) {
-      const miscCharges = 20;
-      const shippingCharges = invoice.shippingCharges || 0;
-      const packagingCost = invoice.packagingCost || 0;
+      const miscCharges = 20; // Fixed miscellaneous charges
+      const shippingCharges = invoice.shippingCharges || 0; // Default shippingCharges to 0
+      const packagingCost = invoice.packagingCost || 0; // Default packagingCost to 0
 
       let invoiceProfit = 0;
+
       for (const item of invoice.items) {
         const dbItem = await Item.findById(item.itemId);
-        const costPrice = dbItem ? dbItem.costPrice || 0 : 0;
-        const sellingPrice = item.price;
-        const quantity = item.quantity;
+        const costPrice = dbItem ? dbItem.costPrice || 0 : 0; // Cost price from database
+        const sellingPrice = item.price; // Selling price in the invoice
+        const quantity = item.quantity; // Quantity sold
 
-        totalCostPrice += costPrice * quantity;
-        invoiceProfit += (sellingPrice - costPrice) * quantity;
+        // Calculate item profit
+        totalCostPrice += costPrice * quantity; // Accumulate total cost price
+        invoiceProfit += (sellingPrice - costPrice) * quantity; // Add item profit
 
+        // Track product sales for summary
         if (!productSales[item.name]) productSales[item.name] = 0;
         productSales[item.name] += quantity;
       }
 
-      invoiceProfit -= miscCharges + shippingCharges + packagingCost;
+      // Adjust profit for shipping cost based on who pays
+      if (invoice.shippingPayer === 'seller') {
+        invoiceProfit -= shippingCharges; // Deduct shipping charges if the seller pays
+      }
 
+      // Deduct additional fixed costs
+      invoiceProfit -= miscCharges + packagingCost;
+
+      // Update cumulative totals
       totalRevenue += invoice.totalAmount;
       totalProfit += invoiceProfit;
       totalPackagingCost += packagingCost;
       totalShippingCharges += shippingCharges;
       totalMiscCharges += miscCharges;
 
+      // Monthly data aggregation
       const month = new Date(invoice.date).toLocaleString('default', { month: 'short' });
       if (!monthlyData[month]) monthlyData[month] = { revenue: 0, profit: 0 };
       monthlyData[month].revenue += invoice.totalAmount;
