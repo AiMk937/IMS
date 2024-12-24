@@ -7,10 +7,7 @@ const Invoice = require('../models/invoice'); // Import the Invoice model
 // Route: Render invoice generation page
 router.get('/', async (req, res) => {
   try {
-    // Fetch all items from the database
     const items = await Item.find();
-
-    // Convert image buffer to Base64 for display
     const itemsWithImages = items.map((item) => ({
       ...item._doc,
       imageBase64: item.image
@@ -18,10 +15,7 @@ router.get('/', async (req, res) => {
         : null,
     }));
 
-    // Add the current date for the invoice generation page
-    const formattedDate = new Date().toLocaleDateString('en-GB'); // Format as DD/MM/YYYY
-
-    // Render the invoice generation page and pass the items with base64 image and formatted date
+    const formattedDate = new Date().toLocaleDateString('en-GB');
     res.render('inventory/invoice', { items: itemsWithImages, formattedDate });
   } catch (err) {
     console.error('Error loading invoice page:', err);
@@ -31,62 +25,37 @@ router.get('/', async (req, res) => {
 
 // Route: Generate an invoice
 router.post('/generate', async (req, res) => {
-  const { invoiceData, buyerDetails, shippingCharges } = req.body;
+  const { invoiceData, buyerDetails, shippingCharges, shippingPayer } = req.body;
 
-  console.log('Received Request Body:', req.body);
-
-  // Validate buyer details
-  if (
-    !buyerDetails ||
-    typeof buyerDetails.name !== 'string' ||
-    typeof buyerDetails.address !== 'string' ||
-    typeof buyerDetails.contactNumber !== 'string'
-  ) {
-    return res.status(400).json({ error: 'Buyer details are incomplete or invalid.' });
+  // Validate buyer details and invoice data
+  if (!buyerDetails || !Array.isArray(invoiceData) || invoiceData.length === 0) {
+    return res.status(400).json({ error: 'Invalid invoice data or buyer details.' });
   }
-
-  // Validate invoice data
-  if (!invoiceData || !Array.isArray(invoiceData) || invoiceData.length === 0) {
-    return res.status(400).json({ error: 'No items provided for invoice.' });
-  }
-
-  // Validate shipping charges
-  const parsedShippingCharges = parseFloat(shippingCharges) || 0;
-  if (isNaN(parsedShippingCharges) || parsedShippingCharges < 0) {
-    return res.status(400).json({ error: 'Invalid shipping charges.' });
-  }
-  console.log('Parsed Shipping Charges:', parsedShippingCharges);
 
   try {
-    // Fetch items from the database based on itemIds
-    const itemIds = invoiceData.map((data) => data.itemId);
+    // Fetch items from the database
+    const itemIds = invoiceData.map((item) => item.itemId);
     const items = await Item.find({ _id: { $in: itemIds } });
 
-    if (!items || items.length === 0) {
-      return res.status(404).json({ error: 'None of the requested items are available in the inventory.' });
-    }
-
-    // Prepare the invoice items and calculate subtotal
     let subtotal = 0;
     const invoiceItems = [];
 
     for (const item of items) {
-      const matchingData = invoiceData.find((data) => data.itemId === item._id.toString());
-      const quantity = parseInt(matchingData?.quantity, 10);
+      const invoiceItem = invoiceData.find((i) => i.itemId === item._id.toString());
+      if (!invoiceItem) continue;
 
-      if (!quantity || quantity <= 0) {
-        throw new Error(`Invalid quantity for item ${item.name}`);
-      }
+      const quantity = parseInt(invoiceItem.quantity, 10);
 
-      // Check if the inventory has enough quantity
-      if (item.quantity < quantity) {
-        throw new Error(`Not enough quantity for item ${item.name}. Available: ${item.quantity}`);
+      // Check if there's sufficient stock
+      if (quantity > item.quantity) {
+        return res
+          .status(400)
+          .json({ error: `Insufficient stock for ${item.name}. Available: ${item.quantity}` });
       }
 
       const total = quantity * item.sellingPrice;
       subtotal += total;
 
-      // Add to invoice items
       invoiceItems.push({
         itemId: item._id,
         name: item.name,
@@ -96,62 +65,59 @@ router.post('/generate', async (req, res) => {
         total,
       });
 
-      // Update the item's quantity in the database
-      try {
-        item.quantity -= quantity;
-        await item.save(); // Save the updated item back to the database
-      } catch (err) {
-        console.error(`Error updating item ${item.name}:`, err.message);
-        throw new Error(`Failed to update item ${item.name}.`);
-      }
+      // Deduct stock
+      item.quantity -= quantity;
+      await item.save();
     }
 
-    // Calculate total amount
-    const totalAmount = subtotal + parsedShippingCharges;
+    // Determine shipping charges based on the payer
+    let adjustedShippingCharges = parseFloat(shippingCharges) || 0;
+    let totalAmount = subtotal;
 
-    // Fetch the last invoice number and increment
+    if (shippingPayer === 'customer') {
+      totalAmount += adjustedShippingCharges; // Add shipping charges to total if customer pays
+    } else if (shippingPayer === 'seller') {
+      adjustedShippingCharges = 0; // Set shipping charges to 0 if seller pays
+    }
+
+    // Fetch the last invoice number
     const lastInvoice = await Invoice.findOne().sort({ _id: -1 }).select('invoiceNumber');
     const nextInvoiceNumber = lastInvoice
-      ? String(parseInt(lastInvoice.invoiceNumber, 10) + 1).padStart(5, '0')
+      ? String(parseInt(lastInvoice.invoiceNumber.match(/\d+/)[0], 10) + 1).padStart(5, '0')
       : '00001';
 
     // Save the invoice to the database
     const newInvoice = new Invoice({
-      invoiceNumber: nextInvoiceNumber,
+      invoiceNumber: `INV-${nextInvoiceNumber}`,
       buyer: buyerDetails,
       items: invoiceItems,
       totalAmount,
-      shippingCharges: parsedShippingCharges,
+      shippingCharges: adjustedShippingCharges,
+      shippingPayer,
     });
 
     await newInvoice.save();
 
-    // Format the date for the invoice
-    const formattedDate = new Date(newInvoice.date).toLocaleDateString('en-GB'); // Format as DD/MM/YYYY
-
-    // Generate HTML for the invoice
-    const invoiceHtml = `
+    // Send invoice as HTML response
+    res.status(200).send(`
       <div style="text-align: center; margin-bottom: 20px;">
         <h2>AK GLOBAL</h2>
         <p>Flat no. 5 New Light Building, Kalina, Mumbai. 400029</p>
         <p>Contact: 7738255001 | Email: akglobal937@gmail.com</p>
       </div>
       <hr>
-      <div style="margin-bottom: 20px;">
-        <h4>Invoice Number: ${nextInvoiceNumber}</h4>
-        <h6>Date: ${formattedDate}</h6>
-        <h4>Bill To:</h4>
-        <p>
-          Name: ${buyerDetails.name} <br>
-          Address: ${buyerDetails.address} <br>
-          Contact Number: ${buyerDetails.contactNumber}
-        </p>
-      </div>
-      <table class="table" style="width: 100%; border-collapse: collapse;">
+      <h4>Invoice Number: ${newInvoice.invoiceNumber}</h4>
+      <p>Date: ${new Date().toLocaleDateString('en-GB')}</p>
+      <h4>Bill To:</h4>
+      <p>
+        Name: ${buyerDetails.name}<br>
+        Address: ${buyerDetails.address}<br>
+        Contact: ${buyerDetails.contactNumber}
+      </p>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
         <thead>
           <tr>
             <th>Name</th>
-            <th>Description</th>
             <th>Quantity</th>
             <th>Price</th>
             <th>Subtotal</th>
@@ -159,52 +125,36 @@ router.post('/generate', async (req, res) => {
         </thead>
         <tbody>
           ${invoiceItems
-            .map(
-              (item) => `
+        .map(
+          (item) => `
             <tr>
               <td>${item.name}</td>
-              <td>${item.description || 'N/A'}</td>
               <td>${item.quantity}</td>
               <td>₹${item.price.toFixed(2)}</td>
               <td>₹${item.total.toFixed(2)}</td>
-            </tr>
-          `
-            )
-            .join('')}
+            </tr>`
+        )
+        .join('')}
         </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="4" style="text-align: right;"><strong>Subtotal:</strong></td>
-            <td>₹${subtotal.toFixed(2)}</td>
-          </tr>
-          <tr>
-            <td colspan="4" style="text-align: right;"><strong>Shipping Charges:</strong></td>
-            <td>₹${parsedShippingCharges.toFixed(2)}</td>
-          </tr>
-          <tr>
-            <td colspan="4" style="text-align: right;"><strong>Total:</strong></td>
-            <td>₹${totalAmount.toFixed(2)}</td>
-          </tr>
-        </tfoot>
       </table>
+      <div style="text-align: right;">
+        <p><strong>Subtotal:</strong> ₹${subtotal.toFixed(2)}</p>
+        <p><strong>Shipping Charges:</strong> ${shippingPayer === 'seller' ? '<span style="text-decoration: line-through;">₹' + shippingCharges + '</span> Free Shipping' : `₹${adjustedShippingCharges.toFixed(2)}`
+      }</p>
+        <h4><strong>Total:</strong> ₹${totalAmount.toFixed(2)}</h4>
+      </div>
       <hr>
-      <p><strong>Customer Declaration:</strong> I confirm that the products purchased are for personal use only and not for resale.</p>
-      <hr>
-      <p>Thank you for your purchase!</p>
-    `;
-
-    // Send the generated invoice HTML as the response
-    res.status(200).send(invoiceHtml);
+      <div style="text-align: center; margin-top: 20px;">
+        <p>Thank you for your purchase!</p>
+        <p>If you have any questions, contact us at akglobal937@gmail.com</p>
+        <p><b>Customer Self Declaration:</b> The goods sold are intended for personal use and not for resale.</p>
+      </div>
+    `);
   } catch (err) {
     console.error('Error generating invoice:', err.message);
-    res.status(500).json({ error: `Failed to generate invoice: ${err.message}` });
+    res.status(500).json({ error: 'Failed to generate invoice.' });
   }
 });
-
-// Remaining routes (view, edit, delete, etc.) stay the same
-// with discount-related functionality removed in the `edit` route.
-
-module.exports = router;
 
 // Route: View all invoices
 router.get('/view', async (req, res) => {
@@ -237,9 +187,8 @@ router.get('/view', async (req, res) => {
     const invoicesWithProfit = await Promise.all(
       invoices.map(async (invoice) => {
         const miscCharges = 20; // Fixed miscellaneous charges
-        const shippingCharges = invoice.shippingCharges || 0; // Default shippingCharges to 0
         const packagingCost = invoice.packagingCost || 0; // Default packagingCost to 0
-
+        const shippingCharges = invoice.shippingCharges || 0; // Default shippingCharges to 0
         let totalProfit = 0;
 
         // Calculate profit for each item in the invoice
@@ -247,28 +196,33 @@ router.get('/view', async (req, res) => {
           const dbItem = await Item.findById(item.itemId);
           if (dbItem) {
             const sellingPrice = item.price; // Selling price in the invoice
-            const costPrice = dbItem.costPrice || 0; // Fetch cost price from database
+            const costPrice = dbItem.costPrice || 0; // Cost price from database
             const quantity = item.quantity;
 
-            const itemProfit = (sellingPrice - costPrice) * quantity; // Profit per item
+            // Calculate item profit
+            const itemProfit = (sellingPrice - costPrice) * quantity;
             totalProfit += itemProfit;
           }
         }
 
-        // Subtract miscellaneous charges, shipping charges, and packaging cost from total profit
-        totalProfit -= miscCharges + shippingCharges + packagingCost;
+        // Deduct shipping charges if the seller is paying
+        if (invoice.shippingPayer === 'seller') {
+          totalProfit -= shippingCharges; // Deduct shipping charges if the seller pays
+        }
 
+        // Deduct miscellaneous and packaging costs
+        totalProfit -= miscCharges + packagingCost;
+
+        // Return invoice with formatted data
         return {
           ...invoice._doc,
           formattedDate: new Date(invoice.date).toLocaleDateString('en-GB'),
-          shippingCharges: shippingCharges.toFixed(2),
-          packagingCost: packagingCost.toFixed(2),
           profit: totalProfit.toFixed(2), // Attach calculated profit
         };
       })
     );
 
-    // Pass data to the view
+    // Render the view with calculated invoices
     res.render('inventory/invoices', {
       invoices: invoicesWithProfit,
       search,
@@ -282,7 +236,7 @@ router.get('/view', async (req, res) => {
   }
 });
 
-// Route: View specific invoice
+
 router.get('/view/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -299,8 +253,10 @@ router.get('/view/:id', async (req, res) => {
 
     // Calculate Subtotal
     const subtotal = invoice.items.reduce((sum, item) => sum + item.total, 0);
-    const shippingCharges = invoice.shippingCharges || 0; // Default to 0 if not defined
-    const totalAmount = subtotal + shippingCharges;
+    const shippingCharges = invoice.shippingPayer === 'seller' ? 'Free Shipping' : `₹${invoice.shippingCharges.toFixed(2)}`;
+    const totalAmount = invoice.shippingPayer === 'customer'
+      ? subtotal + invoice.shippingCharges
+      : subtotal;
 
     const formattedDate = new Date(invoice.date).toLocaleDateString('en-GB');
 
@@ -308,11 +264,11 @@ router.get('/view/:id', async (req, res) => {
       invoice,
       formattedDate,
       subtotal: subtotal.toFixed(2),
-      shippingCharges: shippingCharges.toFixed(2),
+      shippingCharges,
       totalAmount: totalAmount.toFixed(2),
     });
   } catch (err) {
-    console.error('Error fetching invoice:', err);
+    console.error('Error fetching invoice:', err.message);
     res.status(500).send('Internal Server Error');
   }
 });
@@ -343,7 +299,7 @@ router.get('/edit/:id', async (req, res) => {
 
 router.post('/edit/:id', async (req, res) => {
   const { id } = req.params;
-  const { buyerDetails, invoiceData, shippingCharges } = req.body;
+  const { buyerDetails, invoiceData, shippingCharges, shippingPayer } = req.body;
 
   try {
     const invoice = await Invoice.findById(id);
@@ -391,6 +347,7 @@ router.post('/edit/:id', async (req, res) => {
     invoice.buyer = buyerDetails;
     invoice.items = updatedItems;
     invoice.shippingCharges = parseFloat(shippingCharges);
+    invoice.shippingPayer = shippingPayer; // Save shipping payer
     invoice.totalAmount = totalAmount;
 
     await invoice.save();

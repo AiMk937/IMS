@@ -30,6 +30,11 @@ const invoiceSchema = new mongoose.Schema({
     default: 0, // Default value if no shipping charges are provided
     required: true,
   },
+  shippingPayer: {
+    type: String,
+    enum: ['seller', 'customer'],
+    required: true,
+  },
   packagingCost: { type: Number, default: 0 },
   totalAmount: Number,
   date: { type: Date, default: Date.now },

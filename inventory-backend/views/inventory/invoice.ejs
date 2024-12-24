@@ -1,44 +1,4 @@
 <%- include('../layout/header', { title: 'Generate Invoice' }) %>
-<style>
-  .quantity-group {
-    display: flex;
-    align-items: center; /* Align items vertically in the center */
-  }
-
-  .quantity-group input.item-quantity {
-    text-align: center;
-    width: 60px; /* Adjust width for better visibility */
-    height: 38px; /* Match button height */
-    border: 1px solid #ced4da;
-    border-left: none; /* Remove left border to merge with decrease button */
-    border-right: none; /* Remove right border to merge with increase button */
-    box-shadow: none;
-  }
-
-  .quantity-group button {
-    width: 38px; /* Square buttons for consistent size */
-    height: 38px; /* Match input height */
-    border: 1px solid #ced4da;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f8f9fa; /* Light background */
-  }
-
-  .btn-quantity-decrease {
-    border-top-left-radius: 4px; /* Round top-left corner */
-    border-bottom-left-radius: 4px; /* Round bottom-left corner */
-  }
-
-  .btn-quantity-increase {
-    border-top-right-radius: 4px; /* Round top-right corner */
-    border-bottom-right-radius: 4px; /* Round bottom-right corner */
-  }
-
-  .quantity-group button:hover {
-    background-color: #e2e6ea; /* Slight hover effect */
-  }
-</style>
 <div class="container my-5">
   <header class="text-center mb-4">
     <h1 class="text-primary">Generate Invoice</h1>
@@ -62,8 +22,16 @@
     </div>
     <div class="col-md-6">
       <label for="shippingCharges" class="form-label">Shipping Charges (₹):</label>
-      <input type="number" id="shippingCharges" name="shippingCharges" class="form-control" placeholder="Enter shipping charges" min="0" value="0" required>
-    </div>    
+      <input type="number" id="shippingCharges" name="shippingCharges" class="form-control"
+        placeholder="Enter shipping charges" min="0" value="0" required>
+    </div>
+    <div class="col-md-6">
+      <label for="shippingPayer" class="form-label">Shipping Paid By:</label>
+      <select id="shippingPayer" class="form-control" required>
+        <option value="seller" selected>Seller</option>
+        <option value="customer">Customer</option>
+      </select>
+    </div>
     <div class="table-responsive mt-4">
       <table class="table table-striped table-hover">
         <thead class="table-dark">
@@ -85,61 +53,83 @@
             </td>
             <td>
               <% if (item.imageBase64) { %>
-              <a href="#" data-bs-toggle="modal" data-bs-target="#imageModal<%= item._id %>">
-                <img src="<%= item.imageBase64 %>" alt="Item Image" class="img-thumbnail" style="width: 100px; height: 80px;">
-              </a>
+              <img src="<%= item.imageBase64 %>" alt="Item Image" class="img-thumbnail"
+                style="width: 100px; height: 80px;">
               <% } else { %>
               <span class="text-muted">No Image</span>
               <% } %>
             </td>
-            <td>
-              <%= item.name || "N/A" %>
-            </td>
-            <td>
-              <%= item.description || "N/A" %>
-            </td>
+            <td><%= item.name || "N/A" %></td>
+            <td><%= item.description || "N/A" %></td>
             <td>₹<%= item.sellingPrice ? item.sellingPrice.toFixed(2) : "0.00" %></td>
-            <td>
-              <%= item.quantity || 0 %>
-            </td>
+            <td><%= item.quantity || 0 %></td>
             <td>
               <div class="input-group quantity-group">
-                <button type="button" class="btn btn-outline-secondary btn-quantity-decrease" data-price="<%= item.sellingPrice %>" data-id="<%= item._id %>">-</button>
-                <input type="number" name="quantity-<%= item._id %>" style="width: 0.8em;" class="form-control item-quantity text-center" value="0" min="0" max="<%= item.quantity %>" disabled>
-                <button type="button" class="btn btn-outline-secondary btn-quantity-increase" data-price="<%= item.sellingPrice %>" data-id="<%= item._id %>">+</button>
-              </div>                            
+                <button type="button" class="btn btn-outline-secondary btn-quantity-decrease"
+                  data-price="<%= item.sellingPrice %>" data-id="<%= item._id %>">-</button>
+                <input type="number" name="quantity-<%= item._id %>" class="form-control item-quantity text-center"
+                  value="0" min="0" max="<%= item.quantity %>" disabled>
+                <button type="button" class="btn btn-outline-secondary btn-quantity-increase"
+                  data-price="<%= item.sellingPrice %>" data-id="<%= item._id %>">+</button>
+              </div>
             </td>
           </tr>
-
-          <!-- Image Modal -->
-          <div class="modal fade" id="imageModal<%= item._id %>" tabindex="-1" aria-labelledby="imageModalLabel<%= item._id %>" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="imageModalLabel<%= item._id %>"><%= item.name %> - Image</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                  <img src="<%= item.imageBase64 %>" alt="<%= item.name %>" class="img-fluid">
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- End of Image Modal -->
           <% }) %>
         </tbody>
       </table>
     </div>
-
-    <!-- Display Total Below the Table -->
     <div class="text-end">
       <h5>Total Value: ₹<span id="totalValue">0.00</span></h5>
     </div>
-
     <div class="text-center mt-3">
       <button type="button" id="generateInvoice" class="btn btn-primary px-4 py-2">Generate Invoice</button>
     </div>
   </form>
+
+  <div id="invoicePreview" class="mt-5" style="display: none;">
+    <div id="invoiceContent" style="border: 1px solid #ddd; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2>AK GLOBAL</h2>
+        <p>Flat no. 5 New Light Building, Kalina, Mumbai. 400029</p>
+        <p>Contact: 7738255001 | Email: akglobal937@gmail.com</p>
+      </div>
+      <hr>
+      <h4>Invoice Number: <span id="invoiceNumber"></span></h4>
+      <p>Date: <span id="invoiceDate"></span></p>
+      <h4>Bill To:</h4>
+      <p>
+        Name: <span id="buyerNamePreview"></span><br>
+        Address: <span id="buyerAddressPreview"></span><br>
+        Contact: <span id="buyerContactPreview"></span>
+      </p>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody id="invoiceItems"></tbody>
+      </table>
+      <hr>
+      <div style="text-align: right;">
+        <p><strong>Subtotal:</strong> ₹<span id="invoiceSubtotal"></span></p>
+        <p><strong>Shipping Charges:</strong> ₹<span id="invoiceShipping"></span></p>
+        <h4><strong>Total:</strong> ₹<span id="invoiceTotal"></span></h4>
+      </div>
+      <hr>
+      <div style="text-align: center; margin-top: 20px;">
+        <p>Thank you for your purchase!</p>
+        <p>If you have any questions, contact us at akglobal937@gmail.com</p>
+        <p><b>Customer Declaration:</b> Goods are for personal use only.</p>
+      </div>
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+      <button id="downloadInvoice" class="btn btn-success">Download Invoice</button>
+    </div>
+  </div>
 </div>
 
 <%- include('../layout/footer') %>
@@ -147,9 +137,11 @@
 <script>
   const updateTotal = () => {
     let total = 0;
-    document.querySelectorAll('.item-quantity').forEach(input => {
+    document.querySelectorAll('.item-quantity').forEach((input) => {
       if (parseInt(input.value) > 0) {
-        const price = parseFloat(input.closest('.quantity-group').querySelector('.btn-quantity-increase').getAttribute('data-price'));
+        const price = parseFloat(
+          input.closest('.quantity-group').querySelector('.btn-quantity-increase').getAttribute('data-price')
+        );
         const quantity = parseInt(input.value, 10);
         if (!isNaN(price) && !isNaN(quantity)) {
           total += price * quantity;
@@ -165,36 +157,31 @@
     let quantity = parseInt(input.value) || 0;
     const max = parseInt(input.getAttribute('max')) || Infinity;
 
-    // Update quantity
     quantity += increment;
     if (quantity < 0) quantity = 0;
     if (quantity > max) quantity = max;
 
     input.value = quantity;
-
-    // Auto-select checkbox if quantity > 0
     checkbox.checked = quantity > 0;
 
-    // Update totals
     updateTotal();
   };
 
-  // Attach event listeners
-  document.querySelectorAll('.btn-quantity-increase').forEach(button => {
+  document.querySelectorAll('.btn-quantity-increase').forEach((button) => {
     button.addEventListener('click', () => handleQuantityChange(button, 1));
   });
 
-  document.querySelectorAll('.btn-quantity-decrease').forEach(button => {
+  document.querySelectorAll('.btn-quantity-decrease').forEach((button) => {
     button.addEventListener('click', () => handleQuantityChange(button, -1));
   });
 
-  document.querySelectorAll('.select-item').forEach(checkbox => {
+  document.querySelectorAll('.select-item').forEach((checkbox) => {
     checkbox.addEventListener('change', (e) => {
       const input = e.target.closest('tr').querySelector('.item-quantity');
       if (e.target.checked) {
         input.disabled = false;
         if (parseInt(input.value) === 0) {
-          input.value = 1; // Default to 1 if selected
+          input.value = 1;
         }
       } else {
         input.value = 0;
@@ -202,5 +189,73 @@
       }
       updateTotal();
     });
+  });
+
+  const generateInvoice = async () => {
+    const buyerName = document.getElementById('buyerName').value.trim();
+    const buyerContact = document.getElementById('buyerContact').value.trim();
+    const buyerAddress = document.getElementById('buyerAddress').value.trim();
+    const shippingCharges = parseFloat(document.getElementById('shippingCharges').value) || 0;
+    const shippingPayer = document.getElementById('shippingPayer').value;
+
+    const selectedItems = Array.from(document.querySelectorAll('.select-item:checked')).map((checkbox) => {
+      const row = checkbox.closest('tr');
+      return {
+        itemId: checkbox.value,
+        quantity: parseInt(row.querySelector('.item-quantity').value, 10),
+        price: parseFloat(row.querySelector('.btn-quantity-increase').getAttribute('data-price')),
+      };
+    });
+
+    if (!buyerName || !buyerContact || !buyerAddress || selectedItems.length === 0) {
+      alert('Please fill in buyer details and select at least one item.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/invoice/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          buyerDetails: { name: buyerName, address: buyerAddress, contactNumber: buyerContact },
+          shippingCharges,
+          shippingPayer,
+          invoiceData: selectedItems,
+        }),
+      });
+
+      if (response.ok) {
+        const invoiceHtml = await response.text();
+        document.getElementById('invoiceContent').innerHTML = invoiceHtml;
+        document.getElementById('invoicePreview').style.display = 'block';
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error}`);
+      }
+    } catch (err) {
+      alert('Failed to generate invoice. Please try again.');
+    }
+  };
+
+  document.getElementById('generateInvoice').addEventListener('click', generateInvoice);
+
+  document.getElementById('downloadInvoice').addEventListener('click', () => {
+    const content = document.getElementById('invoiceContent').innerHTML;
+    const printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Invoice</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+          </style>
+        </head>
+        <body>${content}</body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
   });
 </script>
