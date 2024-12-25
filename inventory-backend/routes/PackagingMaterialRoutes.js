@@ -86,28 +86,42 @@ router.get('/', async (req, res) => {
 // Route: Show the form to add packaging to an invoice
 router.get('/add-packaging-to-invoice', async (req, res) => {
   try {
-    // Fetch all invoices with attached packaging details
-    const invoices = await Invoice.find({ packagingDetails: { $exists: true, $not: { $size: 0 } } });
+    console.log('Route hit: GET /add-packaging-to-invoice'); // Debugging route access
 
-    const consolidatedData = invoices.map(invoice => {
+    // Fetch all invoices
+    const invoices = await Invoice.find({});
+    console.log('Fetched invoices:', invoices.length); // Debugging number of invoices fetched
+
+    const consolidatedData = invoices.map((invoice, index) => {
       let totalCost = 0;
       let shippingPackagingCount = 0;
       let internalPackagingCount = 0;
 
-      invoice.packagingDetails.forEach(detail => {
-        totalCost += detail.cost;
+      if (invoice.packagingDetails && invoice.packagingDetails.length > 0) {
+        invoice.packagingDetails.forEach(detail => {
+          totalCost += detail.cost;
 
-        // Categorize packaging based on category
-        if (detail.category === 'shipping box' || detail.category === 'shipping bag') {
-          shippingPackagingCount += detail.quantityUsed;
-        } else if (detail.category === 'box' || detail.category === 'plastic') {
-          internalPackagingCount += detail.quantityUsed;
-        }
-      });
+          // Categorize packaging based on category
+          if (detail.category === 'shipping box' || detail.category === 'shipping bag') {
+            shippingPackagingCount += detail.quantityUsed;
+          } else if (detail.category === 'box' || detail.category === 'plastic') {
+            internalPackagingCount += detail.quantityUsed;
+          }
+        });
+      }
+
+      console.log(`Invoice ${index + 1}:`, {
+        invoiceNumber: invoice.invoiceNumber,
+        buyerName: invoice.buyer.name || 'N/A',
+        totalCost,
+        shippingPackagingCount,
+        internalPackagingCount,
+        id: invoice._id,
+      }); // Debugging invoice details
 
       return {
         invoiceNumber: invoice.invoiceNumber,
-        buyerName: invoice.buyer?.name || 'N/A',
+        buyerName: invoice.buyer.name || 'N/A',
         totalCost: totalCost.toFixed(2),
         shippingPackagingCount,
         internalPackagingCount,
@@ -115,15 +129,18 @@ router.get('/add-packaging-to-invoice', async (req, res) => {
       };
     });
 
-    const packagingMaterials = await PackagingMaterial.find(); // Fetch all packaging materials
+    // Fetch all packaging materials
+    const packagingMaterials = await PackagingMaterial.find();
+    console.log('Fetched packaging materials:', packagingMaterials.length); // Debugging number of packaging materials fetched
 
+    // Render the form with fetched data
     res.render('inventory/addPackaging', {
       invoices,
       consolidatedData,
       packagingMaterials,
     });
   } catch (err) {
-    console.error('Error fetching invoices or packaging materials:', err);
+    console.error('Error fetching invoices or packaging materials:', err); // Debugging error messages
     res.status(500).send('Internal Server Error');
   }
 });
@@ -192,18 +209,23 @@ router.get('/view/:id', async (req, res) => {
 });
 
 
-
 router.post('/add-packaging-to-invoice', async (req, res) => {
-  const { invoiceNumber, packagingMaterials } = req.body;
+  const { invoiceId, packagingMaterials } = req.body; // Use invoiceId instead of invoiceNumber
 
   try {
-    console.log('Received invoiceNumber:', invoiceNumber);
+    console.log('Received Request Body:', req.body);
 
-    // Find the invoice by invoiceNumber
-    const invoice = await Invoice.findOne({ invoiceNumber });
+    // Validate invoiceId
+    if (!invoiceId) {
+      console.error('Missing invoiceId');
+      return res.status(400).send('Invoice ID is required.');
+    }
+
+    // Find the invoice by invoiceId
+    const invoice = await Invoice.findById(invoiceId); // Adjusted to use findById
     if (!invoice) {
-      console.error('Invoice not found for Invoice Number:', invoiceNumber);
-      return res.status(404).send('Invoice not found. Please select a valid invoice.');
+      console.error(`Invoice not found for Invoice ID: ${invoiceId}`);
+      return res.status(404).send(`Invoice not found for Invoice ID: ${invoiceId}`);
     }
 
     const packagingDetails = [];
@@ -245,15 +267,14 @@ router.post('/add-packaging-to-invoice', async (req, res) => {
     invoice.packagingCost = totalPackagingCost;
 
     await invoice.save();
-    console.log('Updated Invoice with Packaging Details:', invoice);
+    console.log('Updated Invoice:', invoice);
 
     // Redirect to the packaging view
     res.redirect('/packaging/add-packaging-to-invoice');
   } catch (err) {
-    console.error('Error adding packaging to invoice:', err);
+    console.error('Error adding packaging to invoice:', err.message);
     res.status(500).send('Internal Server Error');
   }
 });
-
 
 module.exports = router;

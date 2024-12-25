@@ -11,12 +11,16 @@
       <label for="invoiceNumber" class="form-label">Select Invoice:</label>
       <select id="invoiceNumber" name="invoiceId" class="form-control" required>
         <option value="">Select Invoice</option>
-        <% invoices.forEach(invoice => { %>
-          <option value="<%= invoice._id %>">
-            Invoice #<%= invoice.invoiceNumber %> - <%= invoice.buyer.name %>
-          </option>
-        <% }) %>
-      </select>
+        <% if (invoices && invoices.length > 0) { %>
+          <% invoices.forEach(invoice => { %>
+            <option value="<%= invoice.id %>">
+              <%= invoice.invoiceNumber %> - <%= invoice.buyer.name %>
+            </option>
+          <% }) %>
+        <% } else { %>
+          <option value="">No invoices available</option>
+        <% } %>
+      </select>          
     </div>
     <h5>Packaging Materials:</h5>
     <% packagingMaterials.forEach(material => { %>
@@ -81,3 +85,7 @@
   
 
 <%- include('../layout/footer') %>
+
+<script>
+  console.log('Invoices in EJS: ', <%= JSON.stringify(invoices) %>);
+</script>
