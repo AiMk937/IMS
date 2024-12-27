@@ -1,0 +1,121 @@
+<%- include('../layout/header', { title: 'Edit Packaging Material' }) %>
+
+<div class="container my-5">
+  <header class="text-center mb-4">
+    <h1 class="display-6 fw-bold">Edit Packaging Material</h1>
+    <p class="lead">Update the details of your packaging material below.</p>
+  </header>
+
+  <div class="card shadow">
+    <div class="card-body">
+      <form action="/packaging/edit-material/<%= material._id %>" method="POST">
+        <div class="mb-3">
+          <label for="name" class="form-label">Material Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            class="form-control"
+            value="<%= material.name %>"
+            placeholder="Enter material name"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="category" class="form-label">Category</label>
+          <select id="category" name="category" class="form-select" required>
+            <option value="box" <%= material.category === 'box' ? 'selected' : '' %>>Box</option>
+            <option value="shipping box" <%= material.category === 'shipping box' ? 'selected' : '' %>>Shipping Box</option>
+            <option value="plastic" <%= material.category === 'plastic' ? 'selected' : '' %>>Plastic</option>
+            <option value="other" <%= material.category === 'other' ? 'selected' : '' %>>Other</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="cost" class="form-label">Cost</label>
+          <input
+            type="number"
+            id="cost"
+            name="cost"
+            class="form-control"
+            step="0.01"
+            value="<%= material.cost %>"
+            placeholder="Enter cost"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="quantity" class="form-label">Quantity</label>
+          <input
+            type="number"
+            id="quantity"
+            name="quantity"
+            class="form-control"
+            value="<%= material.quantity %>"
+            placeholder="Enter quantity"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <label for="reorderLevel" class="form-label">Reorder Level</label>
+          <input
+            type="number"
+            id="reorderLevel"
+            name="reorderLevel"
+            class="form-control"
+            value="<%= material.reorderLevel %>"
+            placeholder="Enter reorder level"
+            required
+          />
+        </div>
+
+        <% if (material.category === 'shipping box') { %>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label for="dimensions-length" class="form-label">Length</label>
+              <input
+                type="number"
+                id="dimensions-length"
+                name="dimensions[length]"
+                class="form-control"
+                step="0.01"
+                value="<%= material.dimensions.length %>"
+                placeholder="Length"
+              />
+            </div>
+            <div class="col-md-4">
+              <label for="dimensions-width" class="form-label">Width</label>
+              <input
+                type="number"
+                id="dimensions-width"
+                name="dimensions[width]"
+                class="form-control"
+                step="0.01"
+                value="<%= material.dimensions.width %>"
+                placeholder="Width"
+              />
+            </div>
+            <div class="col-md-4">
+              <label for="dimensions-height" class="form-label">Height</label>
+              <input
+                type="number"
+                id="dimensions-height"
+                name="dimensions[height]"
+                class="form-control"
+                step="0.01"
+                value="<%= material.dimensions.height %>"
+                placeholder="Height"
+              />
+            </div>
+          </div>
+        <% } %>
+
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <a href="/packaging" class="btn btn-secondary mt-2">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../layout/footer') %>

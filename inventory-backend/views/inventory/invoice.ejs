@@ -67,7 +67,7 @@
               <div class="input-group quantity-group">
                 <button type="button" class="btn btn-outline-secondary btn-quantity-decrease"
                   data-price="<%= item.sellingPrice %>" data-id="<%= item._id %>">-</button>
-                <input type="number" name="quantity-<%= item._id %>" class="form-control item-quantity text-center"
+                <input type="number" name="quantity-<%= item._id %>" style="width: 5vh;" class="form-control item-quantity text-center"
                   value="0" min="0" max="<%= item.quantity %>" disabled>
                 <button type="button" class="btn btn-outline-secondary btn-quantity-increase"
                   data-price="<%= item.sellingPrice %>" data-id="<%= item._id %>">+</button>

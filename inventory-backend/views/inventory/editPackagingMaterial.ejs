@@ -1,82 +1,107 @@
-<%- include('../layout/header', { title: 'Edit Packaging Material' }) %>
+<%- include('../layout/header', { title: 'Edit Packaging Materials for Invoice' }) %>
 
 <div class="container my-5">
   <header class="text-center mb-4">
-    <h1 class="text-primary">Edit Packaging Material</h1>
-    <a href="/packaging" class="btn btn-secondary mt-3">Back to Packaging Materials</a>
+    <h1 class="text-primary">Edit Packaging Materials for Invoice <%= invoice.invoiceNumber %></h1>
+    <a href="/items" class="btn btn-secondary mt-3">Back to Inventory List</a>
   </header>
 
-  <form action="/packaging/edit/<%= material._id %>" method="POST" class="row g-4 bg-light p-4 shadow rounded">
-    <!-- Material Name -->
-    <div class="col-md-6">
-      <label for="name" class="form-label">Name:</label>
-      <input type="text" id="name" name="name" value="<%= material.name %>" class="form-control" required>
-    </div>
-
-    <!-- Material Category -->
-    <div class="col-md-6">
-      <label for="category" class="form-label">Category:</label>
-      <select id="category" name="category" class="form-control" required onchange="toggleDimensions(this.value)">
-        <option value="box" <%= material.category === 'box' ? 'selected' : '' %>>Box</option>
-        <option value="shipping box" <%= material.category === 'shipping box' ? 'selected' : '' %>>Shipping Box</option>
-        <option value="shipping bag" <%= material.category === 'shipping bag' ? 'selected' : '' %>>Shipping Bag</option>
-        <option value="plastic" <%= material.category === 'plastic' ? 'selected' : '' %>>Plastic</option>
-      </select>
-    </div>
-
-    <!-- Cost -->
-    <div class="col-md-6">
-      <label for="cost" class="form-label">Cost (₹):</label>
-      <input type="number" id="cost" name="cost" step="0.01" value="<%= material.cost %>" class="form-control" required>
-    </div>
-
-    <!-- Quantity -->
-    <div class="col-md-6">
-      <label for="quantity" class="form-label">Quantity:</label>
-      <input type="number" id="quantity" name="quantity" value="<%= material.quantity %>" class="form-control" required>
-    </div>
-
-    <!-- Reorder Level -->
-    <div class="col-md-6">
-      <label for="reorderLevel" class="form-label">Reorder Level:</label>
-      <input type="number" id="reorderLevel" name="reorderLevel" value="<%= material.reorderLevel %>" class="form-control" required>
-    </div>
-
-    <!-- Dimensions (Length, Width, Height) -->
-    <div id="dimensionsSection" class="col-12" style="<%= material.category === 'shipping box' ? '' : 'display: none;' %>">
-      <h5 class="text-secondary">Dimensions (Applicable for Shipping Boxes)</h5>
-      <div class="row">
-        <div class="col-md-4">
-          <label for="length" class="form-label">Length (cm):</label>
-          <input type="number" id="length" name="dimensions[length]" value="<%= material.dimensions?.length || '' %>" class="form-control" step="0.01">
-        </div>
-        <div class="col-md-4">
-          <label for="width" class="form-label">Width (cm):</label>
-          <input type="number" id="width" name="dimensions[width]" value="<%= material.dimensions?.width || '' %>" class="form-control" step="0.01">
-        </div>
-        <div class="col-md-4">
-          <label for="height" class="form-label">Height (cm):</label>
-          <input type="number" id="height" name="dimensions[height]" value="<%= material.dimensions?.height || '' %>" class="form-control" step="0.01">
-        </div>
-      </div>
+  <!-- Form Start -->
+  <form action="/packaging/edit/<%= invoice._id %>" method="POST">
+    <!-- Packaging Materials Section -->
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th scope="col">Select</th>
+            <th scope="col">Name</th>
+            <th scope="col">Cost</th>
+            <th scope="col">Available Quantity</th>
+            <th scope="col">Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% packagingMaterials.forEach(material => { %>
+            <tr>
+              <td>
+                <!-- Checkbox for selecting material -->
+                <input type="checkbox" 
+                       class="form-check-input" 
+                       id="material-<%= material._id %>" 
+                       name="materials[<%= material._id %>][selected]" 
+                       value="true" 
+                       <%= invoice.packagingDetails.some(detail => detail.materialId._id.toString() === material._id.toString()) ? 'checked' : '' %>>
+              </td>
+              <td><%= material.name %></td>
+              <td>₹<%= material.cost %></td>
+              <td><%= material.quantity %></td>
+              <td>
+                <!-- Quantity field with stepper controls -->
+                <div class="input-group">
+                  <button type="button" 
+                          class="btn btn-outline-secondary" 
+                          onclick="decrementQuantity('<%= material._id %>', <%= material.quantity %>)">-</button>
+                  <input type="number" 
+                         name="materials[<%= material._id %>][quantityUsed]" 
+                         id="quantity-<%= material._id %>" 
+                         min="0" 
+                         max="<%= material.quantity %>" 
+                         class="form-control text-center" 
+                         value="<%= invoice.packagingDetails.find(detail => detail.materialId._id.toString() === material._id.toString())?.quantityUsed || 0 %>" 
+                         oninput="toggleCheckbox('<%= material._id %>')">
+                  <button type="button" 
+                          class="btn btn-outline-secondary" 
+                          onclick="incrementQuantity('<%= material._id %>', <%= material.quantity %>)">+</button>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
     </div>
 
     <!-- Submit Button -->
-    <div class="col-12 text-center">
-      <button type="submit" class="btn btn-primary px-4 py-2">Update Material</button>
+    <div class="text-center mt-4">
+      <button type="submit" class="btn btn-primary px-4 py-2">Update Packaging Details</button>
     </div>
   </form>
+  <!-- Form End -->
+
 </div>
 
 <%- include('../layout/footer') %>
 
 <script>
-  function toggleDimensions(category) {
-    const dimensionsSection = document.getElementById('dimensionsSection');
-    if (category === 'shipping box') {
-      dimensionsSection.style.display = 'block';
+  // Function to decrement quantity
+  function decrementQuantity(materialId, maxQuantity) {
+    const quantityInput = document.getElementById(`quantity-${materialId}`);
+    let currentValue = parseInt(quantityInput.value) || 0;
+    if (currentValue > 0) {
+      quantityInput.value = currentValue - 1;
+      toggleCheckbox(materialId);
+    }
+  }
+
+  // Function to increment quantity
+  function incrementQuantity(materialId, maxQuantity) {
+    const quantityInput = document.getElementById(`quantity-${materialId}`);
+    let currentValue = parseInt(quantityInput.value) || 0;
+    if (currentValue < maxQuantity) {
+      quantityInput.value = currentValue + 1;
+      toggleCheckbox(materialId);
+    }
+  }
+
+  // Automatically toggle the checkbox when quantity is entered
+  function toggleCheckbox(materialId) {
+    const quantityInput = document.getElementById(`quantity-${materialId}`);
+    const checkbox = document.getElementById(`material-${materialId}`);
+
+    // If quantity is entered, check the checkbox
+    if (quantityInput.value && parseInt(quantityInput.value) > 0) {
+      checkbox.checked = true;
     } else {
-      dimensionsSection.style.display = 'none';
+      checkbox.checked = false;
     }
   }
 </script>

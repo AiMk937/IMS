@@ -302,3 +302,23 @@ canvas {
     height: 32px;
   }
 }
+
+.table {
+  border: 1px solid #dee2e6;
+}
+
+.table th,
+.table td {
+  vertical-align: middle;
+  text-align: center;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+h1,
+h5 {
+  font-weight: bold;
+}
