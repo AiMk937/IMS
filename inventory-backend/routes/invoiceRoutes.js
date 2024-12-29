@@ -389,7 +389,6 @@ router.get('/delete/:id', async (req, res) => {
   }
 });
 
-// Shipping Label Route
 router.get('/download-label/:id', async (req, res) => {
   try {
     const invoiceId = req.params.id;
@@ -413,7 +412,7 @@ router.get('/download-label/:id', async (req, res) => {
     // Create a PDF document
     const doc = new PDFDocument({
       size: 'A4', // Page size A4
-      margins: { top: 125, left: 20, right: 20, bottom: 40 }, // Adjusted margins for vertical centering
+      margins: { top: 100, left: 50, right: 50, bottom: 50 }, // Adjusted margins for alignment
     });
 
     res.setHeader('Content-Type', 'application/pdf');
@@ -422,12 +421,13 @@ router.get('/download-label/:id', async (req, res) => {
     // Pipe the PDF to the response
     doc.pipe(res);
 
-    // Center the content on the page
-    const centerX = doc.page.width / 2;
-    const contentWidth = doc.page.width - 75; // Adjusted for margins
+    // Adjust vertical positioning for centering
+    const pageHeight = doc.page.height;
+    const contentStartY = (pageHeight - 300) / 2; // Dynamically calculated to center content vertically
+
     // Add "SPEED POST" title
     doc
-      .fontSize(32)
+      .fontSize(34)
       .font('Helvetica-Bold')
       .text('SPEED POST', { align: 'center' })
       .moveDown(1.5);
@@ -436,36 +436,31 @@ router.get('/download-label/:id', async (req, res) => {
     doc
       .fontSize(32) // Font size for headings
       .font('Helvetica-Bold')
-      .text('TO:', { align: 'left', continued: true })
-      .moveDown(1.5);
+      .text('TO:', 125, ) // Left-aligned at x = 50
+      .moveDown(0.5);
 
     doc
-      .fontSize(30) // Larger size for buyer details
+      .fontSize(30) // Font size for buyer details
       .font('Helvetica')
-      .text(`${buyer.name}`, { width: contentWidth, align: 'center', weight: 'bold' })
-      .moveDown(0.2)
-      .text(`${buyer.address}`, { width: contentWidth, align: 'center' })
-      .moveDown(0.4)
-      .text(`Phone: ${buyer.contactNumber}`, { align: 'center' })
+      .text(`${buyer.name}`, 150) // Left-aligned at x = 50
+      .text(`${buyer.address}`, 150)
+      .text(`Phone: ${buyer.contactNumber}`, 150)
       .moveDown(2);
 
     // Add "From" Section
     doc
-      .fontSize(30)
+      .fontSize(28)
       .font('Helvetica-Bold')
-      .text('From:', { align: 'left', underline: true })
+      .text('From:', 50) // Left-aligned at x = 50
       .moveDown(0.5);
 
     doc
-      .fontSize(24) // Smaller size for sender address
+      .fontSize(24) // Smaller font size for sender details
       .font('Helvetica')
-      .text('Aisha Khan')
-      .text('Flat No. 5 New Light Building, Church Road, Kalina, Santacruz East,', {
-        align: 'left',
-        margin: 60,
-      })
-      .text('Mumbai, Maharashtra, 400029')
-      .text('Phone: +91-7738255001');
+      .text('Aisha Khan', 50)
+      .text('Flat No. 5 New Light Building, Church Road, Kalina, Santacruz East,', 50)
+      .text('Mumbai, Maharashtra, 400029', 50)
+      .text('Phone: +91-7738255001', 50);
 
     // Finalize the document
     doc.end();
