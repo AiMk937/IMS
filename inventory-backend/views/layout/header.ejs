@@ -13,25 +13,49 @@
   <style>
     /* Custom styling for better appearance */
     .offcanvas {
-      background-color: #343a40; /* Dark background */
-      color: #f8f9fa; /* Light text */
+      background-color: #212529 !important; /* Darker background */
+      color: #f8f9fa !important; /* Light text */
     }
-    .offcanvas .nav-link {
-      color: #f8f9fa;
-      transition: color 0.3s ease;
+
+    .card {
+      border: 1px solid #7c8389 !important;
+      margin-bottom: 15px; /* Space between cards */
     }
-    .offcanvas .nav-link:hover {
+
+    .card-header {
+      background-color: #343a40; /* Subtle dark header */
+      font-weight: bold;
+    }
+
+    .card-header i {
+      font-size: 1.2rem; /* Icon size */
+      margin-right: 5px; /* Space between icon and text */
+    }
+
+    .card-body ul {
+      padding-left: 0;
+    }
+
+    .card-body ul li {
+      margin-bottom: 8px;
+    }
+
+    .card-body ul li a {
+      color: #f8f9fa; /* White text for links */
+      text-decoration: none;
+      transition: color 0.3s ease; /* Smooth hover effect */
+    }
+
+    .card-body ul li a:hover {
       color: #ffc107; /* Highlight link on hover */
     }
-    .offcanvas-header {
-      border-bottom: 1px solid #495057;
-    }
+
     .offcanvas-footer {
       border-top: 1px solid #495057;
       padding: 10px;
       text-align: center;
       font-size: 0.9rem;
-      color: #aaa;
+      color: #aaa; /* Footer text */
     }
   </style>
 </head>
@@ -51,8 +75,8 @@
     </div>
   </header>
 
-  <!-- Off-Canvas Navbar (Right-Side) -->
-  <div class="offcanvas offcanvas-end bg-dark text-white" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+  <!-- Off-Canvas Navbar -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
     <div class="offcanvas-header">
       <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Navigation</h5>
       <button 
@@ -62,40 +86,72 @@
         aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link" href="/items">Inventory List</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/items/add">Add New Item</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/invoice">Generate Invoice</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/invoice/view">View Invoices</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/packaging">Packaging Materials</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/packaging/add-packaging">Add Packaging Material</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/packaging/add-packaging-to-invoice">Add Packaging to Invoice</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/profit">Profit Analytics</a>
-        </li>
-        <!-- New Links -->
-        <li class="nav-item">
-          <a class="nav-link" href="/ecommerce/view">E-commerce Orders</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/ecommerce/add">Add E-commerce Order</a>
-        </li>
-      </ul>
+      <!-- Inventory Section -->
+      <div class="card bg-dark text-white">
+        <div class="card-header">
+          <i class="bi bi-box-seam"></i> Inventory Management
+        </div>
+        <div class="card-body">
+          <ul class="list-unstyled">
+            <li><a href="/items">Inventory List</a></li>
+            <li><a href="/items/add">Add New Item</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Invoice Section -->
+      <div class="card bg-dark text-white">
+        <div class="card-header">
+          <i class="bi bi-receipt"></i> Invoice Management
+        </div>
+        <div class="card-body">
+          <ul class="list-unstyled">
+            <li><a href="/invoice">Generate Invoice</a></li>
+            <li><a href="/invoice/view">View Invoices</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Packaging Section -->
+      <div class="card bg-dark text-white">
+        <div class="card-header">
+          <i class="bi bi-box"></i> Packaging Management
+        </div>
+        <div class="card-body">
+          <ul class="list-unstyled">
+            <li><a href="/packaging">Packaging Materials</a></li>
+            <li><a href="/packaging/add-packaging">Add Packaging Material</a></li>
+            <li><a href="/packaging/add-packaging-to-invoice">Add Packaging to Invoice</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Profit Analytics Section -->
+      <div class="card bg-dark text-white">
+        <div class="card-header">
+          <i class="bi bi-graph-up-arrow"></i> Profit Analytics
+        </div>
+        <div class="card-body">
+          <ul class="list-unstyled">
+            <li><a href="/profit">Profit Overview</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- E-commerce Section -->
+      <div class="card bg-dark text-white">
+        <div class="card-header">
+          <i class="bi bi-cart"></i> E-commerce Management
+        </div>
+        <div class="card-body">
+          <ul class="list-unstyled">
+            <li><a href="/ecommerce/view">E-commerce Orders</a></li>
+            <li><a href="/ecommerce/add">Add E-commerce Order</a></li>
+          </ul>
+        </div>
+      </div>
     </div>
+
     <div class="offcanvas-footer">
       <p>© 2024 AK GLOBAL</p>
     </div>
@@ -105,6 +161,11 @@
   <main class="container my-4">
     <!-- Content will load here -->
   </main>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-3">
+    <p class="text-center mb-0">© 2024 AK GLOBAL. All rights reserved.</p>
+  </footer>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>

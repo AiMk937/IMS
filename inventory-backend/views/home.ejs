@@ -7,27 +7,27 @@
   </header>
 
   <!-- Navigation Buttons -->
-  <div class="row g-4">
+  <div class="row g-4 d-flex align-items-center">
     <div class="col-lg-3 col-md-6 text-center">
-      <a href="/items" class="btn btn-primary btn-md w-100 py-3 shadow-sm rounded">
+      <a href="/items" class="btn btn-primary btn-md w-100 py-3 shadow-sm rounded" data-bs-toggle="tooltip" data-bs-placement="top" title="View and manage your inventory." aria-label="View Inventory">
         <i class="bi bi-boxes fs-4"></i>
         <h6 class="mt-2">View Inventory</h6>
       </a>
     </div>
     <div class="col-lg-3 col-md-6 text-center">
-      <a href="/items/add" class="btn btn-success btn-md w-100 py-3 shadow-sm rounded">
+      <a href="/items/add" class="btn btn-success btn-md w-100 py-3 shadow-sm rounded" data-bs-toggle="tooltip" data-bs-placement="top" title="Add new items to your inventory." aria-label="Add New Item">
         <i class="bi bi-plus-square fs-4"></i>
         <h6 class="mt-2">Add New Item</h6>
       </a>
     </div>
     <div class="col-lg-3 col-md-6 text-center">
-      <a href="/invoice" class="btn btn-warning btn-md w-100 py-3 shadow-sm rounded">
+      <a href="/invoice" class="btn btn-warning btn-md w-100 py-3 shadow-sm rounded" data-bs-toggle="tooltip" data-bs-placement="top" title="Generate and manage invoices." aria-label="Generate Invoice">
         <i class="bi bi-receipt fs-4"></i>
         <h6 class="mt-2">Generate Invoice</h6>
       </a>
     </div>
     <div class="col-lg-3 col-md-6 text-center">
-      <a href="/invoice/view" class="btn btn-info btn-md w-100 py-3 shadow-sm rounded">
+      <a href="/invoice/view" class="btn btn-info btn-md w-100 py-3 shadow-sm rounded" data-bs-toggle="tooltip" data-bs-placement="top" title="View all generated invoices." aria-label="View All Invoices">
         <i class="bi bi-list-task fs-4"></i>
         <h6 class="mt-2">View All Invoices</h6>
       </a>
@@ -37,32 +37,39 @@
   <!-- Profit and Sales Analysis -->
   <section class="mt-5">
     <h4 class="text-center mb-4">Profit and Sales Overview</h4>
-    <div class="row text-center">
-      <div class="col-md-4">
-        <div class="p-4 border rounded shadow-sm">
-          <h5>Total Revenue</h5>
-          <p class="text-success display-6">₹<%= totalRevenue %></p>
+
+    <% if (!totalRevenue || !totalProfit || !totalExpenses) { %>
+      <p class="text-center text-muted">No financial data available yet. Add items or invoices to get started!</p>
+    <% } else { %>
+      <div class="row text-center">
+        <div class="col-md-4">
+          <div class="p-4 border rounded shadow-sm">
+            <h5>Total Revenue</h5>
+            <p class="text-success display-6">₹<%= totalRevenue %></p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-4 border rounded shadow-sm">
+            <h5>Total Profit</h5>
+            <p class="text-<%= totalProfit > 0 ? 'primary' : 'danger' %> display-6">₹<%= totalProfit %></p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-4 border rounded shadow-sm">
+            <h5>Total Expenses</h5>
+            <p class="text-danger display-6">₹<%= totalExpenses %></p>
+          </div>
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="p-4 border rounded shadow-sm">
-          <h5>Total Profit</h5>
-          <p class="text-primary display-6">₹<%= totalProfit %></p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="p-4 border rounded shadow-sm">
-          <h5>Total Expenses</h5>
-          <p class="text-danger display-6">₹<%= totalExpenses %></p>
-        </div>
-      </div>
-    </div>
+    <% } %>
 
     <!-- Bar Chart for Monthly Sales and Profit -->
-    <div class="mt-4">
-      <h5 class="text-center mb-3">Monthly Sales and Profit</h5>
-      <canvas id="salesProfitChart" style="max-height: 400px;"></canvas>
-    </div>
+    <% if (monthlyLabels && monthlyLabels.length > 0) { %>
+      <div class="mt-4">
+        <h5 class="text-center mb-3">Monthly Sales and Profit</h5>
+        <canvas id="salesProfitChart" style="max-height: 400px;"></canvas>
+      </div>
+    <% } %>
   </section>
 </div>
 
@@ -76,23 +83,59 @@
   const monthlyRevenue = <%- JSON.stringify(monthlyRevenue || []) %>;
   const monthlyProfit = <%- JSON.stringify(monthlyProfit || []) %>;
 
-  new Chart(document.getElementById('salesProfitChart'), {
-    type: 'bar',
-    data: {
-      labels: monthlyLabels,
-      datasets: [
-        {
-          label: 'Revenue',
-          data: monthlyRevenue,
-          backgroundColor: 'rgba(75, 192, 192, 0.6)'
+  if (monthlyLabels.length > 0) {
+    new Chart(document.getElementById('salesProfitChart'), {
+      type: 'bar',
+      data: {
+        labels: monthlyLabels,
+        datasets: [
+          {
+            label: 'Revenue',
+            data: monthlyRevenue,
+            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+          },
+          {
+            label: 'Profit',
+            data: monthlyProfit,
+            backgroundColor: 'rgba(153, 102, 255, 0.6)',
+            borderColor: 'rgba(153, 102, 255, 1)',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: (tooltipItem) => `₹${tooltipItem.raw}`
+            }
+          },
+          legend: {
+            display: true,
+            position: 'top'
+          }
         },
-        {
-          label: 'Profit',
-          data: monthlyProfit,
-          backgroundColor: 'rgba(153, 102, 255, 0.6)'
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Amount (₹)'
+            }
+          }
         }
-      ]
-    },
-    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+      }
+    });
+  } else {
+    console.log('No chart data available');
+  }
+
+  // Initialize Bootstrap tooltips
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+    new bootstrap.Tooltip(tooltipTriggerEl);
   });
 </script>

@@ -26,50 +26,47 @@
       <input type="number" id="shippingCharges" name="shippingCharges" class="form-control" min="0" value="<%= invoice.shippingCharges %>" required>
     </div>
     <div class="col-md-6">
-      <label for="shippingPayer" class="form-label">Who Pays Shipping Charges?</label>
+      <label for="shippingPayer" class="form-label">Shipping Paid By:</label>
       <select id="shippingPayer" class="form-select" required>
         <option value="customer" <%= invoice.shippingPayer === 'customer' ? 'selected' : '' %>>Customer</option>
         <option value="seller" <%= invoice.shippingPayer === 'seller' ? 'selected' : '' %>>Seller</option>
       </select>
     </div>
     <div class="table-responsive mt-4">
-      <table class="table table-striped table-hover">
+      <table class="table table-bordered table-striped">
         <thead class="table-dark">
           <tr>
-            <th scope="col">Select</th>
+            <th scope="col" class="text-center">Select</th>
             <th scope="col">Name</th>
             <th scope="col">Description</th>
             <th scope="col">Price</th>
             <th scope="col">Available Quantity</th>
-            <th scope="col">Quantity</th>
+            <th scope="col" style="width: 20vh;">Quantity</th>
           </tr>
         </thead>
         <tbody>
           <% items.forEach(item => { %>
           <tr>
-            <td>
+            <td class="text-center">
               <input type="checkbox" name="selectedItems" value="<%= item._id %>" <%= invoice.items.some(i => i.itemId.toString() === item._id.toString()) ? 'checked' : '' %>>
             </td>
-            <td>
-              <%= item.name || "N/A" %>
-            </td>
-            <td>
-              <%= item.description || "N/A" %>
-            </td>
+            <td><%= item.name || "N/A" %></td>
+            <td><%= item.description || "N/A" %></td>
             <td>₹<%= item.sellingPrice ? item.sellingPrice.toFixed(2) : "0.00" %></td>
+            <td class="text-center"><%= item.quantity || 0 %></td>
             <td>
-              <%= item.quantity || 0 %>
-            </td>
-            <td>
-              <input type="number" name="quantity-<%= item._id %>" class="form-control" placeholder="Enter quantity" min="1"
-                max="<%= item.quantity %>" value="<%= invoice.items.find(i => i.itemId.toString() === item._id.toString())?.quantity || '' %>">
+              <div class="input-group">
+                <button class="btn btn-outline-secondary" type="button">-</button>
+                <input type="number" name="quantity-<%= item._id %>" class="form-control text-center" placeholder="0" min="1" max="<%= item.quantity %>" value="<%= invoice.items.find(i => i.itemId.toString() === item._id.toString())?.quantity || '' %>">
+                <button class="btn btn-outline-secondary" type="button">+</button>
+              </div>
             </td>
           </tr>
           <% }) %>
         </tbody>
       </table>
-    </div>
-
+    </div>    
+    
     <div class="text-center">
       <button type="button" id="saveInvoice" class="btn btn-success px-4 py-2">Save Changes</button>
     </div>
@@ -119,4 +116,32 @@
       alert('Failed to update invoice.');
     }
   });
+
+  document.addEventListener("DOMContentLoaded", () => {
+  const inputGroups = document.querySelectorAll(".input-group");
+
+  inputGroups.forEach((group) => {
+    const minusButton = group.querySelector(".btn-outline-secondary:first-child");
+    const plusButton = group.querySelector(".btn-outline-secondary:last-child");
+    const inputField = group.querySelector(".form-control");
+
+    // Handle minus button click
+    minusButton.addEventListener("click", () => {
+      let currentValue = parseInt(inputField.value) || 0;
+      if (currentValue > 0) {
+        inputField.value = currentValue - 1;
+      }
+    });
+
+    // Handle plus button click
+    plusButton.addEventListener("click", () => {
+      let currentValue = parseInt(inputField.value) || 0;
+      let maxValue = parseInt(inputField.getAttribute("max")) || Infinity;
+      if (currentValue < maxValue) {
+        inputField.value = currentValue + 1;
+      }
+    });
+  });
+});
+
 </script>

@@ -79,6 +79,7 @@ form button:hover {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #dee2e6;
 }
 
 .table th,
@@ -107,12 +108,27 @@ form button:hover {
   border-radius: 5px;
   font-size: 0.9rem;
   font-weight: bold;
+  text-align: center;
+  transition: all 0.3s ease-in-out;
+}
+
+.btn h5 {
+  margin: 0;
+  color: white;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
 }
 
 .btn-success {
   background-color: #28a745;
   border: none;
-  transition: background-color 0.3s ease;
 }
 
 .btn-success:hover {
@@ -123,7 +139,6 @@ form button:hover {
   background-color: #ffc107;
   border: none;
   color: black;
-  transition: background-color 0.3s ease;
 }
 
 .btn-warning:hover {
@@ -133,7 +148,6 @@ form button:hover {
 .btn-danger {
   background-color: #dc3545;
   border: none;
-  transition: background-color 0.3s ease;
 }
 
 .btn-danger:hover {
@@ -162,7 +176,7 @@ footer p:hover {
   opacity: 1;
 }
 
-/* Card Buttons on Home Page */
+/* Home Page Buttons */
 .home-buttons .btn {
   font-size: 1.2rem;
   padding: 1rem 1.5rem;
@@ -175,55 +189,11 @@ footer p:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Enhancing Visibility */
+/* Enhanced Visibility */
 .text-muted {
   color: #6c757d !important;
 }
 
-
-/* Button styles for homepage */
-.btn {
-  text-align: center;
-  font-weight: bold;
-}
-
-.btn h5 {
-  margin: 0;
-  color: white;
-}
-
-.btn:hover {
-  transform: translateY(-3px);
-  transition: all 0.3s ease-in-out;
-}
-
-.btn-primary:hover {
-  background-color: #0056b3;
-}
-
-.btn-success:hover {
-  background-color: #218838;
-}
-
-.btn-warning:hover {
-  background-color: #e0a800;
-}
-
-.btn-info:hover {
-  background-color: #117a8b;
-}
-
-/* Navbar Styling */
-
-.navbar-brand {
-  font-size: 1.75rem; /* Increase font size of brand */
-  font-weight: bold;
-}
-canvas {
-  max-width: 400px;  /* Set maximum width */
-  max-height: 400px; /* Set maximum height */
-  margin: 0 auto;    /* Center align the chart */
-}
 .text-muted[title] {
   position: relative;
   cursor: help;
@@ -244,81 +214,86 @@ canvas {
   z-index: 1000;
 }
 
+/* Quantity Group */
 .quantity-group {
   display: flex;
-  align-items: center; /* Align items vertically in the center */
+  align-items: center;
 }
 
 .quantity-group input.item-quantity {
   text-align: center;
-  width: 60px; /* Adjust width for better visibility */
-  height: 38px; /* Match button height */
+  width: 60px;
+  height: 38px;
   border: 1px solid #ced4da;
-  border-left: none; /* Remove left border to merge with decrease button */
-  border-right: none; /* Remove right border to merge with increase button */
+  border-left: none;
+  border-right: none;
   box-shadow: none;
 }
 
 .quantity-group button {
-  width: 38px; /* Square buttons for consistent size */
-  height: 38px; /* Match input height */
+  width: 38px;
+  height: 38px;
   border: 1px solid #ced4da;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f8f9fa; /* Light background */
+  background-color: #f8f9fa;
 }
 
 .btn-quantity-decrease {
-  border-top-left-radius: 4px; /* Round top-left corner */
-  border-bottom-left-radius: 4px; /* Round bottom-left corner */
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
 }
 
 .btn-quantity-increase {
-  border-top-right-radius: 4px; /* Round top-right corner */
-  border-bottom-right-radius: 4px; /* Round bottom-right corner */
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
 }
 
 .quantity-group button:hover {
-  background-color: #e2e6ea; /* Slight hover effect */
+  background-color: #e2e6ea;
 }
 
-/* Hide description column for screens smaller than 767px */
+/* Responsive Styles */
 @media (max-width: 767px) {
-  td:nth-child(4), th:nth-child(4) {
-    display: none; /* Hides the description column */
+  td:nth-child(4),
+  th:nth-child(4) {
+    display: none;
   }
 
   .table {
-    font-size: 14px; /* Reduce font size for better fit */
+    font-size: 14px;
   }
 
   .quantity-group input.item-quantity {
-    width: 50px; /* Adjust width for smaller screens */
+    width: 50px;
   }
 
   .quantity-group button {
-    width: 32px; /* Adjust button size */
+    width: 32px;
     height: 32px;
   }
 }
 
-.table {
-  border: 1px solid #dee2e6;
+/* Navbar */
+.navbar-brand {
+  font-size: 1.75rem;
+  font-weight: bold;
 }
 
-.table th,
-.table td {
-  vertical-align: middle;
-  text-align: center;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  border-color: #007bff;
+/* Canvas */
+canvas {
+  max-width: 400px;
+  max-height: 400px;
+  margin: 0 auto;
 }
 
 h1,
 h5 {
   font-weight: bold;
+}
+
+.input-group .form-control {
+  width: 80px; /* Adjust the width as needed */
+  text-align: center;
 }
