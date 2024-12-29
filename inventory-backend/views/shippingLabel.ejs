@@ -1,0 +1,84 @@
+<%- include('./layout/header', { title: 'Shipping Label' }) %>
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+
+  .shipping-label {
+    border: 2px solid #000;
+    padding: 20px;
+    width: 100%;
+    height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .label-heading {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-decoration: underline;
+  }
+
+  .buyer-address {
+    font-size: 1.8rem;
+    font-weight: bold;
+  }
+
+  .sender-address {
+    font-size: 1.4rem;
+    color: #555;
+  }
+
+  /* Print optimization */
+  @media print {
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .shipping-label {
+      border: none;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+    }
+
+    .btn {
+      display: none;
+    }
+  }
+</style>
+
+<div class="shipping-label">
+  <!-- To Section -->
+  <div>
+    <p class="label-heading">To:</p>
+    <div class="buyer-address">
+      <%= buyer.name %><br>
+      <%= buyer.address %><br>
+      Phone: <%= buyer.contactNumber %>
+    </div>
+  </div>
+
+  <!-- From Section -->
+  <div>
+    <p class="label-heading">From:</p>
+    <div class="sender-address">
+      AK GLOBAL<br>
+      123 Business Lane<br>
+      Mumbai, Maharashtra, 400001<br>
+      Phone: +91-9876543210
+    </div>
+  </div>
+</div>
+
+<!-- Print Button -->
+<button class="btn btn-primary w-100 mt-4" onclick="window.print()">Print Shipping Label</button>
+
+<%- include('./layout/footer') %>

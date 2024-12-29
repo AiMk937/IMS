@@ -3,6 +3,9 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const Item = require('../models/item');
 const Invoice = require('../models/invoice'); // Import the Invoice model
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
 
 // Route: Render invoice generation page
 router.get('/', async (req, res) => {
@@ -383,6 +386,92 @@ router.get('/delete/:id', async (req, res) => {
   } catch (err) {
     console.error('Error deleting invoice:', err.message);
     res.status(500).send('Internal Server Error');
+  }
+});
+
+// Shipping Label Route
+router.get('/download-label/:id', async (req, res) => {
+  try {
+    const invoiceId = req.params.id;
+
+    // Fetch the invoice details from the database
+    const invoice = await Invoice.findById(invoiceId);
+
+    if (!invoice) {
+      return res.status(404).send('Invoice not found.');
+    }
+
+    const buyer = {
+      name: invoice.buyer.name.toUpperCase(),
+      address: invoice.buyer.address,
+      contactNumber: invoice.buyer.contactNumber,
+    };
+
+    // Create a descriptive filename
+    const fileName = `Invoice-${invoice.invoiceNumber}_${buyer.name}.pdf`;
+
+    // Create a PDF document
+    const doc = new PDFDocument({
+      size: 'A4', // Page size A4
+      margins: { top: 125, left: 20, right: 20, bottom: 40 }, // Adjusted margins for vertical centering
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+    // Pipe the PDF to the response
+    doc.pipe(res);
+
+    // Center the content on the page
+    const centerX = doc.page.width / 2;
+    const contentWidth = doc.page.width - 75; // Adjusted for margins
+    // Add "SPEED POST" title
+    doc
+      .fontSize(32)
+      .font('Helvetica-Bold')
+      .text('SPEED POST', { align: 'center' })
+      .moveDown(1.5);
+
+    // Add "To" Section
+    doc
+      .fontSize(32) // Font size for headings
+      .font('Helvetica-Bold')
+      .text('TO:', { align: 'left', continued: true })
+      .moveDown(1.5);
+
+    doc
+      .fontSize(30) // Larger size for buyer details
+      .font('Helvetica')
+      .text(`${buyer.name}`, { width: contentWidth, align: 'center', weight: 'bold' })
+      .moveDown(0.2)
+      .text(`${buyer.address}`, { width: contentWidth, align: 'center' })
+      .moveDown(0.4)
+      .text(`Phone: ${buyer.contactNumber}`, { align: 'center' })
+      .moveDown(2);
+
+    // Add "From" Section
+    doc
+      .fontSize(30)
+      .font('Helvetica-Bold')
+      .text('From:', { align: 'left', underline: true })
+      .moveDown(0.5);
+
+    doc
+      .fontSize(24) // Smaller size for sender address
+      .font('Helvetica')
+      .text('Aisha Khan')
+      .text('Flat No. 5 New Light Building, Church Road, Kalina, Santacruz East,', {
+        align: 'left',
+        margin: 60,
+      })
+      .text('Mumbai, Maharashtra, 400029')
+      .text('Phone: +91-7738255001');
+
+    // Finalize the document
+    doc.end();
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('An error occurred while generating the shipping label.');
   }
 });
 
