@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     const selectedCategory = req.query.category || ''; // Get selected category from query
     const search = req.query.search || ''; // Get search query from query string
     const page = parseInt(req.query.page, 10) || 1; // Get current page from query string, default to 1
-    const perPage = 10; // Number of items per page
+    const perPage = 20; // Number of items per page
     const categories = [
       'Beauty Products',
       'Bracelet',
