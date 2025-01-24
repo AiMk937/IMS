@@ -34,7 +34,6 @@ router.get('/add', async (req, res) => {
   }
 });
 
-// POST: Save E-commerce Order
 router.post('/add-order', async (req, res) => {
   try {
     const {
@@ -47,10 +46,11 @@ router.post('/add-order', async (req, res) => {
       packagingMaterials,
     } = req.body;
 
-    let totalAmount = 0;
-    let totalProfit = 0;
+    let totalAmount = 0; // Total selling price for the order
+    let totalCost = 0;   // Total cost price (products + packaging materials)
+    let totalProfit = 0; // Profit = Total Selling Price - Total Cost - Charges
 
-    // Process products and deduct stock
+    // Process products
     const processedProducts = [];
     for (const product of products) {
       const { productId, quantity, sellingPrice } = product;
@@ -59,7 +59,12 @@ router.post('/add-order', async (req, res) => {
       if (!item) throw new Error(`Product with ID ${productId} not found.`);
 
       const quantitySold = Number(quantity);
-      const sellingPriceValue = Number(sellingPrice);
+      const totalSellingPrice = Number(sellingPrice); // Total price for all quantities
+      if (quantitySold <= 0 || totalSellingPrice <= 0) {
+        throw new Error(`Invalid selling price or quantity for product: ${item.name}`);
+      }
+
+      const unitSellingPrice = totalSellingPrice / quantitySold; // Per unit price
       const costPrice = item.costPrice || 0;
 
       if (item.quantity < quantitySold) {
@@ -69,18 +74,18 @@ router.post('/add-order', async (req, res) => {
       item.quantity -= quantitySold;
       await item.save();
 
-      // Total amount and profit
-      totalAmount += sellingPriceValue * quantitySold;
-      totalProfit += (sellingPriceValue - costPrice) * quantitySold;
+      // Update totals
+      totalAmount += totalSellingPrice;
+      totalCost += costPrice * quantitySold;
 
       processedProducts.push({
         productId,
         quantity: quantitySold,
-        sellingPrice: sellingPriceValue,
+        sellingPrice: totalSellingPrice, // Total price for all quantities
       });
     }
 
-    // Process packaging materials and deduct stock
+    // Process packaging materials
     const processedPackaging = [];
     for (const packaging of packagingMaterials) {
       const { packagingId, quantity } = packaging;
@@ -89,9 +94,12 @@ router.post('/add-order', async (req, res) => {
       if (!material) throw new Error(`Packaging material with ID ${packagingId} not found.`);
 
       const quantityUsed = Number(quantity);
-      if (material.quantity < quantityUsed) {
-        throw new Error(`Insufficient stock for packaging material: ${material.name}`);
+      if (quantityUsed <= 0) {
+        throw new Error(`Invalid quantity for packaging material: ${material.name}`);
       }
+
+      const materialCost = material.cost || 0; // Cost per unit of packaging material
+      totalCost += materialCost * quantityUsed; // Add to total cost
 
       material.quantity -= quantityUsed;
       await material.save();
@@ -102,9 +110,9 @@ router.post('/add-order', async (req, res) => {
       });
     }
 
-    // Subtract platform, GST, and shipping charges from profit
+    // Final profit calculation
     const charges = Number(platformCharges) + Number(GSTCharges) + Number(shippingCharges);
-    totalProfit -= charges;
+    totalProfit = totalAmount - totalCost - charges;
 
     // Save the order
     const newOrder = new EcommerceOrder({
@@ -144,8 +152,6 @@ router.get('/edit/:id', async (req, res) => {
   }
 });
 
-// POST: Update E-commerce Order
-// POST: Update E-commerce Order
 router.post('/edit/:id', async (req, res) => {
   try {
     const {
@@ -157,52 +163,77 @@ router.post('/edit/:id', async (req, res) => {
       packagingMaterials,
     } = req.body;
 
-    let totalAmount = 0;
-    let totalCost = 0; // To calculate profit
+    let totalAmount = 0; // Total selling price for the order
+    let totalCost = 0;   // Total cost price (products + packaging materials)
+    let totalProfit = 0; // Profit = Total Selling Price - Total Cost - Charges
+
     const updatedProducts = [];
 
     // Process updated products
     for (const product of products) {
       const { productId, quantity, sellingPrice } = product;
 
-      // Fetch item details for cost price
       const item = await Item.findById(productId);
       if (!item) throw new Error(`Product with ID ${productId} not found.`);
 
       const quantitySold = Number(quantity) || 0;
-      const productSellingPrice = Number(sellingPrice) || 0;
+      const totalSellingPrice = Number(sellingPrice) || 0; // Total price for all quantities
+      if (quantitySold <= 0 || totalSellingPrice <= 0) {
+        throw new Error(`Invalid selling price or quantity for product: ${item.name}`);
+      }
+
+      const unitSellingPrice = totalSellingPrice / quantitySold; // Per unit price
       const productCostPrice = Number(item.costPrice) || 0;
 
-      totalAmount += productSellingPrice * quantitySold; // Total Selling Price
-      totalCost += productCostPrice * quantitySold; // Total Cost Price
+      totalAmount += totalSellingPrice; // Add to total selling price
+      totalCost += productCostPrice * quantitySold; // Add to total cost
 
       updatedProducts.push({
         productId,
         quantity: quantitySold,
-        sellingPrice: productSellingPrice,
+        sellingPrice: totalSellingPrice, // Total price for all quantities
       });
     }
 
-    // Calculate charges
-    const platformChargesNum = Number(platformCharges) || 0;
-    const GSTChargesNum = Number(GSTCharges) || 0;
-    const shippingChargesNum = Number(shippingCharges) || 0;
+    // Process updated packaging materials
+    const updatedPackaging = [];
+    for (const packaging of packagingMaterials) {
+      const { packagingId, quantity } = packaging;
 
-    // Calculate profit
-    const profit = totalAmount - totalCost - platformChargesNum - GSTChargesNum - shippingChargesNum;
+      const material = await PackagingMaterial.findById(packagingId);
+      if (!material) throw new Error(`Packaging material with ID ${packagingId} not found.`);
+
+      const quantityUsed = Number(quantity) || 0;
+      if (quantityUsed <= 0) {
+        throw new Error(`Invalid quantity for packaging material: ${material.name}`);
+      }
+
+      const materialCost = material.cost || 0; // Cost per unit of packaging material
+      totalCost += materialCost * quantityUsed; // Add to total cost
+
+      updatedPackaging.push({
+        packagingId,
+        quantity: quantityUsed,
+      });
+    }
+
+    // Final profit calculation
+    const charges = Number(platformCharges) + Number(GSTCharges) + Number(shippingCharges);
+    totalProfit = totalAmount - totalCost - charges;
 
     // Update the order
     await EcommerceOrder.findByIdAndUpdate(req.params.id, {
       platform,
-      platformCharges: platformChargesNum,
-      GSTCharges: GSTChargesNum,
-      shippingCharges: shippingChargesNum,
+      platformCharges: Number(platformCharges),
+      GSTCharges: Number(GSTCharges),
+      shippingCharges: Number(shippingCharges),
       products: updatedProducts,
-      packagingMaterials,
+      packagingMaterials: updatedPackaging,
       totalAmount: totalAmount.toFixed(2),
-      profit: profit.toFixed(2),
+      profit: totalProfit.toFixed(2),
     });
 
+    console.log('✅ E-commerce order updated successfully!');
     res.redirect('/ecommerce/view');
   } catch (err) {
     console.error('❌ Error updating e-commerce order:', err.message);

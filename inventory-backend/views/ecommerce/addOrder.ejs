@@ -132,4 +132,37 @@
       e.target.closest('.product-entry').remove();
     }
   });
+
+  // Add Packaging Row
+  let packagingCount = 1;
+  document.getElementById('add-packaging').addEventListener('click', () => {
+    const packagingList = document.getElementById('packaging-list');
+    const newPackagingEntry = `
+      <div class="packaging-entry row mb-2">
+        <div class="col-md-8">
+          <label>Packaging Material</label>
+          <select class="form-select" name="packagingMaterials[${packagingCount}][packagingId]" required>
+            <% packagingMaterials.forEach(material => { %>
+            <option value="<%= material._id %>"><%= material.name %> (₹<%= material.cost %>)</option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label>Quantity</label>
+          <input type="number" class="form-control" name="packagingMaterials[${packagingCount}][quantity]" min="1" required />
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+          <button type="button" class="btn btn-danger remove-packaging">-</button>
+        </div>
+      </div>`;
+    packagingList.insertAdjacentHTML('beforeend', newPackagingEntry);
+    packagingCount++;
+  });
+
+  // Remove Packaging Row
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-packaging')) {
+      e.target.closest('.packaging-entry').remove();
+    }
+  });
 </script>

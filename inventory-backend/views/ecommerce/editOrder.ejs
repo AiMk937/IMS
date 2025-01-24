@@ -31,25 +31,58 @@
     <!-- Products -->
     <div class="mb-5">
       <h4>Products Sold</h4>
-      <% order.products.forEach((product, index) => { %>
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <select name="products[<%= index %>][productId]" class="form-select" required>
-              <% items.forEach(item => { %>
-                <option value="<%= item._id %>" <%= product.productId._id.equals(item._id) ? 'selected' : '' %>>
-                  <%= item.name %> (₹<%= item.sellingPrice %>)
-                </option>
-              <% }) %>
-            </select>
+      <div id="products-list">
+        <% order.products.forEach((product, index) => { %>
+          <div class="product-entry row mb-3">
+            <div class="col-md-6">
+              <select name="products[<%= index %>][productId]" class="form-select" required>
+                <% items.forEach(item => { %>
+                  <option value="<%= item._id %>" <%= product.productId._id.equals(item._id) ? 'selected' : '' %>>
+                    <%= item.name %> (₹<%= item.sellingPrice %>)
+                  </option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <input type="number" name="products[<%= index %>][quantity]" class="form-control" value="<%= product.quantity %>" required />
+            </div>
+            <div class="col-md-2">
+              <input type="number" name="products[<%= index %>][sellingPrice]" class="form-control" value="<%= product.sellingPrice %>" required />
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button type="button" class="btn btn-danger remove-product">-</button>
+            </div>
           </div>
-          <div class="col-md-3">
-            <input type="number" name="products[<%= index %>][quantity]" class="form-control" value="<%= product.quantity %>" required />
+        <% }) %>
+      </div>
+      <button type="button" class="btn btn-success mb-3" id="add-product">Add Product</button>
+    </div>
+
+    <!-- Packaging Materials -->
+    <div class="mb-5">
+      <h4>Packaging Materials</h4>
+      <div id="packaging-list">
+        <% order.packagingMaterials.forEach((material, index) => { %>
+          <div class="packaging-entry row mb-3">
+            <div class="col-md-6">
+              <select name="packagingMaterials[<%= index %>][packagingId]" class="form-select" required>
+                <% packagingMaterials.forEach(pm => { %>
+                  <option value="<%= pm._id %>" <%= material.packagingId._id.equals(pm._id) ? 'selected' : '' %>>
+                    <%= pm.name %> (₹<%= pm.cost %>)
+                  </option>
+                <% }) %>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <input type="number" name="packagingMaterials[<%= index %>][quantity]" class="form-control" value="<%= material.quantity %>" required />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button type="button" class="btn btn-danger remove-packaging">-</button>
+            </div>
           </div>
-          <div class="col-md-3">
-            <input type="number" name="products[<%= index %>][sellingPrice]" class="form-control" value="<%= product.sellingPrice %>" required />
-          </div>
-        </div>
-      <% }) %>
+        <% }) %>
+      </div>
+      <button type="button" class="btn btn-success mb-3" id="add-packaging">Add Packaging</button>
     </div>
 
     <!-- Save Button -->
@@ -60,3 +93,70 @@
 </div>
 
 <%- include('../layout/footer') %>
+
+<script>
+  // Add Product Row
+  let productCount = <%= order.products.length %>;
+  document.getElementById('add-product').addEventListener('click', () => {
+    const productList = document.getElementById('products-list');
+    const newProductEntry = `
+      <div class="product-entry row mb-3">
+        <div class="col-md-6">
+          <select name="products[${productCount}][productId]" class="form-select" required>
+            <% items.forEach(item => { %>
+            <option value="<%= item._id %>"><%= item.name %> (₹<%= item.sellingPrice %>)</option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <input type="number" name="products[${productCount}][quantity]" class="form-control" min="1" required />
+        </div>
+        <div class="col-md-2">
+          <input type="number" name="products[${productCount}][sellingPrice]" class="form-control" step="0.01" min="0" required />
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="button" class="btn btn-danger remove-product">-</button>
+        </div>
+      </div>`;
+    productList.insertAdjacentHTML('beforeend', newProductEntry);
+    productCount++;
+  });
+
+  // Remove Product Row
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-product')) {
+      e.target.closest('.product-entry').remove();
+    }
+  });
+
+  // Add Packaging Row
+  let packagingCount = <%= order.packagingMaterials.length %>;
+  document.getElementById('add-packaging').addEventListener('click', () => {
+    const packagingList = document.getElementById('packaging-list');
+    const newPackagingEntry = `
+      <div class="packaging-entry row mb-3">
+        <div class="col-md-6">
+          <select name="packagingMaterials[${packagingCount}][packagingId]" class="form-select" required>
+            <% packagingMaterials.forEach(pm => { %>
+            <option value="<%= pm._id %>"><%= pm.name %> (₹<%= pm.cost %>)</option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <input type="number" name="packagingMaterials[${packagingCount}][quantity]" class="form-control" min="1" required />
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+          <button type="button" class="btn btn-danger remove-packaging">-</button>
+        </div>
+      </div>`;
+    packagingList.insertAdjacentHTML('beforeend', newPackagingEntry);
+    packagingCount++;
+  });
+
+  // Remove Packaging Row
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-packaging')) {
+      e.target.closest('.packaging-entry').remove();
+    }
+  });
+</script>

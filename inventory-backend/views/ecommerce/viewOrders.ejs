@@ -29,21 +29,18 @@
       </tr>
     </thead>
     <tbody>
-      <% if (orders.length > 0) { %>
+      <% if (orders && orders.length > 0) { %>
         <% orders.forEach(order => { %>
           <% order.products.forEach(product => { %>
             <tr>
               <td class="text-center"><%= order.orderNumber %></td>
               <td class="text-center"><%= order.platform %></td>
-              <td class="text-center"><%= product.productId.name %></td>
-              <td class="text-center">₹<%= product.productId.costPrice.toFixed(2) %></td>
-              <td class="text-center">₹<%= product.sellingPrice.toFixed(2) %></td>
+              <td class="text-center"><%= product.productId ? product.productId.name : 'N/A' %></td>
+              <td class="text-center">₹<%= (product.productId.costPrice || 0).toFixed(2) %></td>
+              <td class="text-center">₹<%= (product.sellingPrice || 0).toFixed(2) %></td>
               <td class="text-center text-success fw-bold">
-                ₹<%= ((product.sellingPrice - product.productId.costPrice 
-                      - order.platformCharges 
-                      - order.GSTCharges 
-                      - order.shippingCharges) * product.quantity).toFixed(2) %>
-              </td>
+                ₹<%= order.profit %>
+              </td>              
               <td class="text-center">
                 <a href="/ecommerce/edit/<%= order._id %>" class="btn btn-sm btn-warning" title="Edit Order">
                   <i class="bi bi-pencil-square"></i> Edit
